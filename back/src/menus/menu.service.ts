@@ -13,7 +13,7 @@ export interface Menu {
 }
 
 @Injectable()
-export class AppService {
+export class MenuService {
   getMenus(date: string): Menu[] {
     return [
       {
