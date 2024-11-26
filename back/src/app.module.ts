@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeormConfig } from './database/typeorm.config';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { MenuModule } from './menus/menu.module';
+import { UserModule } from './users/user.module';
+import { UserMenusModule } from './user-menus/user-menus.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -13,6 +16,9 @@ import { MenuModule } from './menus/menu.module';
       },
     }),
     MenuModule,
+    UserModule,
+    UserMenusModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
