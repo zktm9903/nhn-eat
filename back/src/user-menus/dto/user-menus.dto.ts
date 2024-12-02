@@ -15,5 +15,5 @@ export class UpdateUserMenuDto {
   disliked: boolean; // 싫어요 여부
 
   @IsBoolean()
-  hasEaten: boolean; // 먹은 여부
+  selected: boolean; // 먹은 여부
 }

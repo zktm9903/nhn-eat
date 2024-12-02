@@ -13,18 +13,18 @@ export class UserMenu extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.userId, { eager: true })
-  user: User; // 어떤 유저인지
+  @ManyToOne(() => User, (user) => user.id)
+  user: User;
 
-  @ManyToOne(() => Menu, (menu) => menu.menuId, { eager: true })
-  menu: Menu; // 어떤 메뉴인지
-
-  @Column({ default: false })
-  liked: boolean; // 좋아요 여부
+  @ManyToOne(() => Menu, (menu) => menu.id)
+  menu: Menu;
 
   @Column({ default: false })
-  disliked: boolean; // 싫어요 여부
+  liked: boolean;
 
   @Column({ default: false })
-  hasEaten: boolean; // 먹은 여부
+  disliked: boolean;
+
+  @Column({ default: false })
+  selected: boolean;
 }

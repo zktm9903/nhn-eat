@@ -6,19 +6,23 @@ import { MenuModule } from './menus/menu.module';
 import { UserModule } from './users/user.module';
 import { UserMenusModule } from './user-menus/user-menus.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      useClass: TypeormConfig, // TODO: typeorm 설정한 클래스
+      useClass: TypeormConfig,
       dataSourceFactory: async (options: DataSourceOptions) => {
         return new DataSource(options).initialize();
       },
     }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV}`,
+    }),
     MenuModule,
     UserModule,
     UserMenusModule,
-    AuthModule,
   ],
   controllers: [],
   providers: [],

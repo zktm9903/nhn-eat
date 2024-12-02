@@ -1,57 +1,83 @@
 import { Injectable } from '@nestjs/common';
+import { CreateMenuDto } from './dto/create-menu.dto';
+import { Menu } from './entity/menu.entity';
+import { DataSource } from 'typeorm';
+import { MenuStats } from './entity/menu-stats.entity';
+import { UserMenusService } from 'src/user-menus/user-menus.service';
+import { UserService } from 'src/users/user.service';
 
-export interface Menu {
-  id: string;
-  date: string;
-  name: string;
-  detail: string;
-  kcal: number;
-  previewImgSrc: string;
-  eat: number;
-  good: number;
-  bad: number;
-}
+type MenuWithUserStatus = Menu & {
+  user?: {
+    id: number;
+    liked: boolean;
+    disliked: boolean;
+    selected: boolean;
+  };
+};
 
 @Injectable()
 export class MenuService {
-  getMenus(date: string): Menu[] {
-    return [
-      {
-        id: '1',
-        date: '2024/11/24',
-        name: '첫번째 메뉴',
-        detail: '첫번째 메뉴의 디테일',
-        kcal: 500,
-        previewImgSrc:
-          'https://www.alleycat.org/wp-content/uploads/2019/03/FELV-cat.jpg',
-        eat: 300,
-        good: 100,
-        bad: 50,
+  constructor(
+    private dataSource: DataSource,
+    private readonly userMenusService: UserMenusService,
+    private readonly userService: UserService,
+  ) {}
+
+  async getTodayMenus(uid): Promise<MenuWithUserStatus[]> {
+    const MenuRepository = this.dataSource.getRepository(Menu);
+    const menus = (await MenuRepository.find({
+      where: {
+        date: new Date(),
       },
-      {
-        id: '2',
-        date: '2024/11/24',
-        name: '첫번째 메뉴',
-        detail: '첫번째 메뉴의 디테일',
-        kcal: 500,
-        previewImgSrc:
-          'https://www.alleycat.org/wp-content/uploads/2019/03/FELV-cat.jpg',
-        eat: 300,
-        good: 100,
-        bad: 50,
+      relations: {
+        stats: true,
       },
-      {
-        id: '3',
-        date: '2024/11/24',
-        name: '첫번째 메뉴',
-        detail: '첫번째 메뉴의 디테일',
-        kcal: 500,
-        previewImgSrc:
-          'https://www.alleycat.org/wp-content/uploads/2019/03/FELV-cat.jpg',
-        eat: 300,
-        good: 100,
-        bad: 50,
-      },
-    ];
+    })) as MenuWithUserStatus[];
+
+    const user = await this.userService.findOne(uid);
+
+    for (const menu of menus) {
+      const userMenu = await this.userMenusService.getUserMenu(user, menu);
+      menu.user = {
+        id: userMenu.id,
+        liked: userMenu.liked,
+        disliked: userMenu.disliked,
+        selected: userMenu.selected,
+      };
+    }
+
+    return menus;
+  }
+
+  async createMenu(createMenuDto: CreateMenuDto): Promise<Menu> {
+    const {
+      name,
+      description,
+      calories,
+      mealType,
+      imageUrl,
+      isLunchBox,
+      date,
+    } = createMenuDto;
+
+    const MenuRepository = this.dataSource.getRepository(Menu);
+    const MenuStatsRepository = this.dataSource.getRepository(MenuStats);
+
+    const menuStats = new MenuStats();
+
+    const menu = new Menu();
+    menu.name = name;
+    menu.description = description;
+    menu.calories = calories;
+    menu.mealType = mealType;
+    menu.imageUrl = imageUrl;
+    menu.isLunchBox = isLunchBox;
+    menu.date = date;
+    menu.stats = menuStats;
+
+    await MenuStatsRepository.save(menuStats);
+    await MenuRepository.save(menu);
+
+    return menu;
   }
 }

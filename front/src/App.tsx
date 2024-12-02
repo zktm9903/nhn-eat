@@ -3,6 +3,8 @@ import { BsHandThumbsUp } from "react-icons/bs";
 import { BsPerson } from "react-icons/bs";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { todayMenus } from "./apis/menu";
 
 interface Menu {
   id: string;
@@ -22,11 +24,7 @@ function App() {
   const [good, setGood] = useState(false);
   const [bad, setBad] = useState(false);
 
-  useEffect(() => {
-    fetch("http://localhost:3000/today")
-      .then((res) => res.json())
-      .then((data) => setMenus(data));
-  }, []);
+  const menuQuery = useQuery({ queryKey: [], queryFn: todayMenus });
 
   const clickEat = (id: string) => {
     if (eat) {

@@ -2,9 +2,9 @@ import {
   BaseEntity,
   Column,
   Entity,
-  PrimaryGeneratedColumn,
-  OneToOne,
   JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { MealType } from '../enum/meal-type.enum';
 import { MenuStats } from './menu-stats.entity';
@@ -12,7 +12,7 @@ import { MenuStats } from './menu-stats.entity';
 @Entity()
 export class Menu extends BaseEntity {
   @PrimaryGeneratedColumn()
-  menuId: number;
+  id: number;
 
   @Column('varchar', { length: 255 })
   name: string;
@@ -26,14 +26,20 @@ export class Menu extends BaseEntity {
   @Column({
     type: 'enum',
     enum: MealType,
-    default: MealType.LUNCH, // 기본값 설정
+    default: MealType.LUNCH,
   })
   mealType: MealType;
 
   @Column('text', { nullable: true })
   imageUrl: string;
 
-  @OneToOne(() => MenuStats, (menuStats) => menuStats.menu, { cascade: true })
-  @JoinColumn({ name: 'menuId' })
+  @Column({ type: 'boolean', default: false })
+  isLunchBox: boolean;
+
+  @Column({ type: 'date' })
+  date: Date;
+
+  @OneToOne(() => MenuStats)
+  @JoinColumn()
   stats: MenuStats;
 }

@@ -4,6 +4,7 @@ import {
   IsInt,
   IsOptional,
   IsUrl,
+  IsBoolean,
   Min,
 } from 'class-validator';
 import { MealType } from '../enum/meal-type.enum';
@@ -25,4 +26,11 @@ export class CreateMenuDto {
   @IsOptional()
   @IsUrl()
   imageUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isLunchBox?: boolean;
+
+  @IsNotEmpty()
+  date: Date;
 }
