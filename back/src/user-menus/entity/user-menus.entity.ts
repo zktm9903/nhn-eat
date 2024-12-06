@@ -4,6 +4,8 @@ import {
   ManyToOne,
   Column,
   BaseEntity,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entity/user.entity';
 import { Menu } from '../../menus/entity/menu.entity';
@@ -27,4 +29,10 @@ export class UserMenu extends BaseEntity {
 
   @Column({ default: false })
   selected: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

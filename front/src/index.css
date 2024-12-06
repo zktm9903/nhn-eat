@@ -9,11 +9,10 @@
 
 body {
   font-family: "Pretendard";
-  margin: 0;
-  width: 240px;
-  /* height: 300px; */
+  width: 600px;
+  height: 600px;
   background-color: #ededed;
-  padding: 0px 8px 8px 8px;
+  padding: 8px 8px 8px 8px;
   overflow: auto;
 }
 
@@ -28,4 +27,5 @@ html::-webkit-scrollbar {
 
 * {
   box-sizing: border-box;
+  margin: 0;
 }
