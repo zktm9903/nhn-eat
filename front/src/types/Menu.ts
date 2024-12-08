@@ -9,7 +9,7 @@ export interface Menu {
 	date: string;
 	stats: {
 		id: number;
-		likes: number;
+		liked: number;
 	};
 	user: {
 		id: number;

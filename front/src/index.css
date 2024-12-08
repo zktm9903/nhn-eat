@@ -92,3 +92,12 @@ html::-webkit-scrollbar {
 		@apply bg-background text-foreground;
 	}
 }
+
+.Toastify__toast-container--bottom-right {
+	bottom: 8px;
+	right: 8px;
+}
+
+.Toastify__toast {
+	margin-bottom: 0;
+}

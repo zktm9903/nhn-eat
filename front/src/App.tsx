@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { CalendarIcon, Flag, Loader2, RefreshCw } from 'lucide-react';
+import { CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from './lib/utils';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { todayMenus } from './apis/menu';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { disLikeMenu, likeMenu, todayMenus } from './apis/menu';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Menu, MenuChartData } from './types/Menu';
 import { CACHE_KEY } from './consts/cacheKey';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -18,11 +18,14 @@ import {
 } from './components/ui/chart';
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 import { Skeleton } from './components/ui/skeleton';
+import { Bounce, toast } from 'react-toastify';
+import { CAT_GIF, getRandomCatGif } from './consts/catGif';
 
 const chartConfig = {
 	desktop: {
 		label: 'Desktop',
-		color: 'hsl(var(--chart-2))',
+		// color: 'hsl(var(--chart-5))',
+		color: '#18181B',
 	},
 	mobile: {
 		label: 'Mobile',
@@ -41,13 +44,30 @@ export default function Home() {
 	const [chartData, setChartData] = useState<MenuChartData[]>();
 
 	useEffect(() => {
+		if (!menuQuery.data) return;
 		setChartData(
-			menuQuery.data?.map(menu => ({
+			menuQuery.data.map(menu => ({
 				menu: menu.name,
-				pick: menu.stats.likes,
+				pick: menu.stats.liked,
 			})),
 		);
-	}, [menuQuery.data]);
+	}, [menuQuery.data, menuQuery.isFetching]);
+
+	useEffect(() => {
+		if (menuQuery.isFetching) return;
+		toast.success('데이터를 불러왔습니다.', {
+			icon: <>🐷</>,
+			position: 'bottom-right',
+			autoClose: 1000,
+			hideProgressBar: false,
+			closeOnClick: true,
+			pauseOnHover: true,
+			draggable: true,
+			progress: undefined,
+			theme: 'colored',
+			transition: Bounce,
+		});
+	}, [menuQuery.isFetching]);
 
 	// ------------------------------ 메뉴 재요청 ------------------------------
 	const [canRefresh, setCanRefresh] = useState(true);
@@ -61,7 +81,6 @@ export default function Home() {
 	};
 
 	// ------------------------------ 이 사람은 투표를 했을까 ------------------------------
-
 	const [block, setBlock] = useState(false);
 
 	useEffect(() => {
@@ -71,7 +90,7 @@ export default function Home() {
 	}, [menuQuery.data]);
 
 	return (
-		<div className="scrollbar-hide flex h-[600px] w-full flex-col">
+		<div className="scrollbar-hide relative flex h-[600px] w-full flex-col">
 			<header className="flex justify-between px-2 py-2">
 				<NowDate />
 				<Button size="icon" onClick={reFresh} disabled={!canRefresh || menuQuery.isFetching}>
@@ -93,7 +112,7 @@ export default function Home() {
 						{menuQuery.data?.length ? (
 							<>
 								<div className="mb-2 grid grid-cols-2 gap-2">
-									{menuQuery.data?.slice(1).map(menu => <MenuCard key={menu.id} menu={menu} />)}
+									{menuQuery.data?.map(menu => <MenuCard key={menu.id} menu={menu} />)}
 								</div>
 								<MenuChartCard menuChartData={chartData} block={block} />
 							</>
@@ -108,18 +127,51 @@ export default function Home() {
 }
 
 function MenuCard({ menu }: { menu: Menu }) {
+	const queryClient = useQueryClient();
+	const [cat, setCat] = useState('');
+
+	useEffect(() => {
+		setCat(getRandomCatGif());
+	}, []);
+
+	const likeMenuMutation = useMutation({
+		mutationFn: likeMenu,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS] });
+		},
+	});
+
+	const disLikeMenuMutation = useMutation({
+		mutationFn: disLikeMenu,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS] });
+		},
+	});
+
+	const likeOrDisLike = () => {
+		if (menu.user.liked) {
+			disLikeMenuMutation.mutate(menu.id + '');
+			return;
+		}
+		likeMenuMutation.mutate(menu.id + '');
+	};
+
 	return (
-		<Card className="flex w-full flex-col hover:bg-zinc-100" key={menu.id}>
-			<CardHeader className="relative flex flex-row items-center justify-between pb-2">
-				<div className="flex">
-					<CardTitle className="mr-2">{menu.name}</CardTitle>
-					<CardDescription className="relative top-[-2px]">{menu.calories}kcal</CardDescription>
+		<Card key={menu.id} onClick={likeOrDisLike} className="flex w-full flex-col hover:bg-zinc-100">
+			<CardHeader className="flex flex-row items-center justify-between pb-2">
+				<div className="flex items-center">
+					<CardTitle className="mr-2 text-[1rem]">{menu.name}</CardTitle>
+					<CardDescription>{menu.calories}kcal</CardDescription>
 				</div>
-				<FaCheckCircle className="relative top-[-2px] text-green-700" />
+				{menu.user.liked && <FaCheckCircle className="relative top-[-2px] text-green-700" />}
 			</CardHeader>
 			<CardContent className="pb-6">
 				<CardDescription className="mb-2 h-10">{menu.description}</CardDescription>
-				<img src={menu.imageUrl ?? ''} className="h-[140px] w-full rounded-sm object-cover" />
+				{menu.imageUrl ? (
+					<img src={menu.imageUrl} className="h-[140px] w-full rounded-sm object-cover" />
+				) : (
+					<img src={cat} className="h-[140px] w-full rounded-sm object-cover" />
+				)}
 			</CardContent>
 		</Card>
 	);
@@ -135,16 +187,18 @@ function MenuChartCard({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>오늘의 메뉴</CardTitle>
+				<CardTitle className="text-[1rem]">오늘의 메뉴</CardTitle>
 				<CardDescription>현재 투표 수</CardDescription>
 			</CardHeader>
 			<CardContent className="relative">
 				{block && (
-					<div className="absolute bottom-0 left-0 right-0 top-[-20px] z-10 flex items-center justify-center backdrop-blur">
-						<CardTitle className="relative top-[-10px] text-center">메뉴를 골라주세요.</CardTitle>
+					<div className="absolute bottom-0 left-0 right-0 top-[-20px] z-10 flex justify-end backdrop-blur">
+						<CardTitle className="black relative top-[-44px] mr-6 text-right text-[1rem] text-red-700">
+							메뉴를 골라주세요.
+						</CardTitle>
 					</div>
 				)}
-				<ChartContainer config={chartConfig}>
+				<ChartContainer config={chartConfig} className="h-[200px]">
 					<BarChart
 						accessibilityLayer
 						data={menuChartData}

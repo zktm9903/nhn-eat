@@ -24,12 +24,6 @@ export class UserMenu extends BaseEntity {
   @Column({ default: false })
   liked: boolean;
 
-  @Column({ default: false })
-  disliked: boolean;
-
-  @Column({ default: false })
-  selected: boolean;
-
   @CreateDateColumn()
   createdAt: Date;
 
