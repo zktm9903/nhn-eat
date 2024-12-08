@@ -9,7 +9,6 @@ export class UserController {
   @Get('/signup')
   async signup(@Res({ passthrough: true }) response: Response) {
     const user = await this.userService.signUp();
-    response.cookie('nhn-eat-uid', user.id);
-    return 'success';
+    return user.id;
   }
 }

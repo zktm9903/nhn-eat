@@ -15,7 +15,7 @@ export class AuthGuard implements CanActivate {
 
     if (request.headers['admin-token'] === process.env.ADMIN_TOKEN) return true;
 
-    const uid = request.cookies['nhn-eat-uid'];
+    const uid = request.headers['authorization'];
     if (!uid) {
       throw new UnauthorizedException();
     }

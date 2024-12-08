@@ -1,3 +1,3 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from './apiClient';
 
-export const signUp = () => apiClient.get("/api/v1/user/signup");
+export const signUp = () => apiClient.get('/api/v1/user/signup').then(res => res.data);

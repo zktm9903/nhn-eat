@@ -1,106 +1,198 @@
-// import { BsHandThumbsDown } from "react-icons/bs";
-// import { BsHandThumbsUp } from "react-icons/bs";
-// import { BsPerson } from "react-icons/bs";
-// import dayjs from "dayjs";
-// import { useState } from "react";
-// import { useQuery } from "@tanstack/react-query";
-// import { todayMenus } from "./apis/menu";
+import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { CalendarIcon, Flag, Loader2, RefreshCw } from 'lucide-react';
+import { cn } from './lib/utils';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { todayMenus } from './apis/menu';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Menu, MenuChartData } from './types/Menu';
+import { CACHE_KEY } from './consts/cacheKey';
+import { FaCheckCircle } from 'react-icons/fa';
+import {
+	ChartConfig,
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+} from './components/ui/chart';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
+import { Skeleton } from './components/ui/skeleton';
 
-// interface Menu {
-//   id: string;
-//   name: string;
-//   detail: string;
-//   kcal: number;
-//   previewImgSrc: string;
-//   eat: number;
-//   good: number;
-//   bad: number;
-// }
+const chartConfig = {
+	desktop: {
+		label: 'Desktop',
+		color: 'hsl(var(--chart-2))',
+	},
+	mobile: {
+		label: 'Mobile',
+		color: 'hsl(var(--chart-2))',
+	},
+	label: {
+		color: 'hsl(var(--background))',
+	},
+} satisfies ChartConfig;
 
-function App() {
-  return <></>;
-  // const [menus, setMenus] = useState<Menu[]>([]);
+export default function Home() {
+	const queryClient = useQueryClient();
 
-  // const [eat, setEat] = useState(false);
-  // const [good, setGood] = useState(false);
-  // const [bad, setBad] = useState(false);
+	// ------------------------------ 메뉴, 차트데이터 ------------------------------
+	const menuQuery = useQuery<Menu[]>({ queryKey: [CACHE_KEY.TODAY_MENUS], queryFn: todayMenus });
+	const [chartData, setChartData] = useState<MenuChartData[]>();
 
-  // const menuQuery = useQuery({ queryKey: [], queryFn: todayMenus });
+	useEffect(() => {
+		setChartData(
+			menuQuery.data?.map(menu => ({
+				menu: menu.name,
+				pick: menu.stats.likes,
+			})),
+		);
+	}, [menuQuery.data]);
 
-  // const clickEat = (id: string) => {
-  //   if (eat) {
-  //     setEat(false);
-  //     fetch(`http://localhost:3000/menu/${id}?eat=false`);
-  //   } else {
-  //     setEat(true);
-  //     fetch(`http://localhost:3000/menu/${id}?eat=true`);
-  //   }
-  // };
+	// ------------------------------ 메뉴 재요청 ------------------------------
+	const [canRefresh, setCanRefresh] = useState(true);
 
-  // const clickGood = (id: string) => {
-  //   if (good) {
-  //     setGood(false);
-  //     fetch(`http://localhost:3000/menu/${id}?good=false`);
-  //   } else {
-  //     setGood(true);
-  //     fetch(`http://localhost:3000/menu/${id}?good=true`);
-  //   }
-  // };
+	const reFresh = () => {
+		setCanRefresh(false);
+		queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS] });
+		setTimeout(() => {
+			setCanRefresh(true);
+		}, 3000);
+	};
 
-  // const clickBad = (id: string) => {
-  //   if (bad) {
-  //     setBad(false);
-  //     fetch(`http://localhost:3000/menu/${id}?bad=false`);
-  //   } else {
-  //     setBad(true);
-  //     fetch(`http://localhost:3000/menu/${id}?bad=true`);
-  //   }
-  // };
+	// ------------------------------ 이 사람은 투표를 했을까 ------------------------------
 
-  // return (
-  //   <div className="flex flex-col gap-2 divide-y-[1px] divide-gray-400">
-  //     <h1 className="pt-2">{dayjs().format("YYYY-MM-DD dddd")}</h1>
-  //     {menus.map((menu) => (
-  //       <article key={menu.id} className="pt-2">
-  //         <div className="flex justify-between text-base">
-  //           <h1 className="flex text-right font-semibold text-[#222222]">
-  //             {menu.name}
-  //           </h1>
-  //           <p className="text-gray-800">{menu.kcal}kcal</p>
-  //         </div>
-  //         <p className="text-xs text-gray-800">{menu.detail}</p>
-  //         <img
-  //           src={menu.previewImgSrc}
-  //           className="mt-1 rounded-sm"
-  //           onClick={() => window.open(menu.previewImgSrc, "_blank")}
-  //         />
-  //         <div className="mt-1 flex items-center justify-end gap-2 text-xs">
-  //           <div
-  //             className="flex items-center gap-1 hover:scale-110"
-  //             onClick={() => clickEat(menu.id)}
-  //           >
-  //             <BsPerson className="scale-125" />
-  //             <p>{menu.eat}</p>
-  //           </div>
-  //           <div
-  //             className="flex items-center gap-1 hover:scale-110"
-  //             onClick={() => clickGood(menu.id)}
-  //           >
-  //             <BsHandThumbsUp />
-  //             <p>{menu.good}</p>
-  //           </div>
-  //           <div
-  //             className="flex items-center gap-1 hover:scale-110"
-  //             onClick={() => clickBad(menu.id)}
-  //           >
-  //             <BsHandThumbsDown />
-  //             <p>{menu.bad}</p>
-  //           </div>
-  //         </div>
-  //       </article>
-  //     ))}
-  //   </div>
-  // );
+	const [block, setBlock] = useState(false);
+
+	useEffect(() => {
+		if (!menuQuery.data) return;
+		const picked = menuQuery.data?.every(menu => menu.user.liked === false);
+		setBlock(picked);
+	}, [menuQuery.data]);
+
+	return (
+		<div className="scrollbar-hide flex h-[600px] w-full flex-col">
+			<header className="flex justify-between px-2 py-2">
+				<NowDate />
+				<Button size="icon" onClick={reFresh} disabled={!canRefresh || menuQuery.isFetching}>
+					{menuQuery.isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+				</Button>
+			</header>
+			<div className="scrollbar-hide w-full flex-grow overflow-auto px-2 pb-4">
+				{menuQuery.isFetching ? (
+					<>
+						<div className="mb-2 flex gap-2">
+							<Skeleton className="h-[240px] flex-grow rounded-xl" />
+							<Skeleton className="h-[240px] flex-grow rounded-xl" />
+						</div>
+
+						<Skeleton className="h-[240px] w-full rounded-xl" />
+					</>
+				) : (
+					<>
+						{menuQuery.data?.length ? (
+							<>
+								<div className="mb-2 grid grid-cols-2 gap-2">
+									{menuQuery.data?.slice(1).map(menu => <MenuCard key={menu.id} menu={menu} />)}
+								</div>
+								<MenuChartCard menuChartData={chartData} block={block} />
+							</>
+						) : (
+							<CardDescription className="mt-10 text-center">데이터가 없습니다.</CardDescription>
+						)}
+					</>
+				)}
+			</div>
+		</div>
+	);
 }
 
-export default App;
+function MenuCard({ menu }: { menu: Menu }) {
+	return (
+		<Card className="flex w-full flex-col hover:bg-zinc-100" key={menu.id}>
+			<CardHeader className="relative flex flex-row items-center justify-between pb-2">
+				<div className="flex">
+					<CardTitle className="mr-2">{menu.name}</CardTitle>
+					<CardDescription className="relative top-[-2px]">{menu.calories}kcal</CardDescription>
+				</div>
+				<FaCheckCircle className="relative top-[-2px] text-green-700" />
+			</CardHeader>
+			<CardContent className="pb-6">
+				<CardDescription className="mb-2 h-10">{menu.description}</CardDescription>
+				<img src={menu.imageUrl ?? ''} className="h-[140px] w-full rounded-sm object-cover" />
+			</CardContent>
+		</Card>
+	);
+}
+
+function MenuChartCard({
+	menuChartData,
+	block,
+}: {
+	menuChartData?: MenuChartData[];
+	block?: boolean;
+}) {
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>오늘의 메뉴</CardTitle>
+				<CardDescription>현재 투표 수</CardDescription>
+			</CardHeader>
+			<CardContent className="relative">
+				{block && (
+					<div className="absolute bottom-0 left-0 right-0 top-[-20px] z-10 flex items-center justify-center backdrop-blur">
+						<CardTitle className="relative top-[-10px] text-center">메뉴를 골라주세요.</CardTitle>
+					</div>
+				)}
+				<ChartContainer config={chartConfig}>
+					<BarChart
+						accessibilityLayer
+						data={menuChartData}
+						layout="vertical"
+						margin={{
+							right: 16,
+						}}
+					>
+						<CartesianGrid horizontal={false} />
+						<YAxis
+							dataKey="menu"
+							type="category"
+							tickLine={false}
+							tickMargin={10}
+							axisLine={false}
+							tickFormatter={value => value.slice(0, 3)}
+							hide
+						/>
+						<XAxis dataKey="pick" type="number" hide />
+						<ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+						<Bar dataKey="pick" layout="vertical" fill="var(--color-desktop)" radius={4}>
+							<LabelList
+								dataKey="menu"
+								position="insideLeft"
+								offset={8}
+								className="fill-[--color-label]"
+								fontSize={12}
+							/>
+							<LabelList
+								dataKey="pick"
+								position="right"
+								offset={8}
+								className="fill-foreground"
+								fontSize={12}
+							/>
+						</Bar>
+					</BarChart>
+				</ChartContainer>
+			</CardContent>
+		</Card>
+	);
+}
+
+function NowDate() {
+	return (
+		<Button variant={'outline'} className={cn('w-auto justify-start text-left font-normal')}>
+			<CalendarIcon />
+			{format(new Date(), 'yyyy년 MM월 dd일 eeee', { locale: ko })}
+		</Button>
+	);
+}

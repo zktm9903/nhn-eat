@@ -11,12 +11,18 @@ export class UserMenusService {
   async getUserMenu(user: User, menu: Menu) {
     const userMenuRepository = this.dataSource.getRepository(UserMenu);
     const userMenu = await userMenuRepository.findOne({
+      relations: {
+        menu: true,
+        user: true,
+      },
       where: {
-        user: user,
-        menu: menu,
+        menu: { id: menu.id },
+        user: { id: user.id },
       },
     });
+
     if (userMenu) return userMenu;
+
     const newtest = new UserMenu();
     newtest.user = user;
     newtest.menu = menu;

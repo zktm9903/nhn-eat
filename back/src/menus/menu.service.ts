@@ -29,7 +29,7 @@ export class MenuService {
     const MenuRepository = this.dataSource.getRepository(Menu);
     const menus = (await MenuRepository.find({
       where: {
-        date: new Date(),
+        date: new Date('2024/12/02'),
       },
       relations: {
         stats: true,

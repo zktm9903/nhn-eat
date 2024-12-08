@@ -7,8 +7,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
   app.enableCors({
-    origin: 'http://localhost:5173', // 요청을 허용할 도메인
-    credentials: true, // 쿠키 및 인증 정보를 허용
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
   });
   app.setGlobalPrefix('api');
   app.enableVersioning({

@@ -1,37 +1,49 @@
-import { ReactNode, useEffect, useState } from "react";
-import { apiClient } from "../apis/apiClient";
-import { signUp } from "../apis/user";
-import { useQuery } from "@tanstack/react-query";
+import { ReactNode, useEffect, useState } from 'react';
+import { apiClient } from '../apis/apiClient';
+import { signUp } from '../apis/user';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { CACHE_KEY } from '@/consts/cacheKey';
 
 export function AuthGuard({ children }: { children: ReactNode }) {
-  const [guard, setGuard] = useState(false);
+	const [guard, setGuard] = useState(false);
 
-  apiClient.interceptors.response.use(
-    (response) => {
-      return response;
-    },
-    (error) => {
-      console.log(error.response.status);
-      if (error.response.status === 401) setGuard(true);
-      return Promise.reject(error);
-    }
-  );
+	apiClient.interceptors.request.use(
+		function (config) {
+			config.headers.Authorization = localStorage.getItem('nhn-eat-uid');
+			return config;
+		},
+		function (error) {
+			return Promise.reject(error);
+		},
+	);
 
-  return <>{guard ? <SignUpPage setGuard={setGuard} /> : children}</>;
+	apiClient.interceptors.response.use(
+		response => {
+			return response;
+		},
+		error => {
+			if (error.response.status === 401) setGuard(true);
+			return Promise.reject(error);
+		},
+	);
+
+	return <>{guard ? <SignUpPage setGuard={setGuard} /> : children}</>;
 }
 
-function SignUpPage({
-  setGuard,
-}: {
-  setGuard: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
-  const signUpQuery = useQuery({ queryKey: [], queryFn: signUp });
+function SignUpPage({ setGuard }: { setGuard: React.Dispatch<React.SetStateAction<boolean>> }) {
+	const signUpQuery = useQuery({ queryKey: [], queryFn: signUp });
+	const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (signUpQuery.isSuccess) {
-      setGuard(false);
-    }
-  }, [signUpQuery.isSuccess]);
+	const reStart = async () => {
+		localStorage.setItem('nhn-eat-uid', signUpQuery.data);
+		await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS] });
+		setGuard(false);
+	};
 
-  return <p>👮‍♀️ Signing up... </p>;
+	useEffect(() => {
+		if (!signUpQuery.isSuccess) return;
+		reStart();
+	}, [signUpQuery.isSuccess]);
+
+	return <p>👮‍♀️ Signing up... </p>;
 }

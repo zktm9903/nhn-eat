@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "./assets/PretendardVariable.woff2";
 import App from "./App";
-import { AuthGuard } from "./components/AuthGuard";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthGuard } from "./components/AuthGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
