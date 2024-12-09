@@ -1,0 +1,37 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:15.2-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: nhn-eat-app
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  back:
+    build:
+      context: ./back
+      dockerfile: dockerfile
+    container_name: nestjs
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: 1234
+      DATABASE_DATABASE: nhn-eat-app
+      DATABASE_SYNCHRONIZE: "true"
+      DATABASE_DROPSCHEMA: "false"
+      DATABASE_MAX_CONNECTION: 100
+      ADMIN_TOKEN: admin123
+      VELOG_URL: https://velog.io/@looksgood99
+
+volumes:
+  postgres-data:
