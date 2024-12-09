@@ -19,7 +19,7 @@ import {
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 import { Skeleton } from './components/ui/skeleton';
 import { Bounce, toast } from 'react-toastify';
-import { CAT_GIF, getRandomCatGif } from './consts/catGif';
+import { getRandomCatGif } from './consts/catGif';
 
 const chartConfig = {
 	desktop: {
@@ -90,14 +90,14 @@ export default function Home() {
 	}, [menuQuery.data]);
 
 	return (
-		<div className="scrollbar-hide relative flex h-[600px] w-full flex-col">
+		<div className="relative flex h-[600px] w-full flex-col scrollbar-hide">
 			<header className="flex justify-between px-2 py-2">
 				<NowDate />
 				<Button size="icon" onClick={reFresh} disabled={!canRefresh || menuQuery.isFetching}>
 					{menuQuery.isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
 				</Button>
 			</header>
-			<div className="scrollbar-hide w-full flex-grow overflow-auto px-2 pb-4">
+			<div className="w-full flex-grow overflow-auto px-2 pb-4 scrollbar-hide">
 				{menuQuery.isFetching ? (
 					<>
 						<div className="mb-2 flex gap-2">
