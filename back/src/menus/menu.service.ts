@@ -1,19 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { Menu } from './entity/menu.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, FindOptionsWhere } from 'typeorm';
 import { MenuStats } from './entity/menu-stats.entity';
-import axios from 'axios';
-import * as cheerio from 'cheerio';
+import { MealType } from './enum/meal-type.enum';
 
 @Injectable()
 export class MenuService {
   constructor(private dataSource: DataSource) {}
+  private readonly logger = new Logger(MenuService.name);
 
-  async getTodayMenus(): Promise<Menu[]> {
+  async getTodayMenus(mealType: MealType): Promise<Menu[]> {
     const MenuRepository = this.dataSource.getRepository(Menu);
     const menus = await MenuRepository.find({
       where: {
+        mealType: mealType,
         date: new Date(),
       },
       relations: {
@@ -27,7 +28,31 @@ export class MenuService {
     return menus;
   }
 
-  async createMenu(createMenuDto: CreateMenuDto): Promise<Menu> {
+  async findOne(where: FindOptionsWhere<Menu> | FindOptionsWhere<Menu>[]) {
+    const MenuRepository = this.dataSource.getRepository(Menu);
+    const menus = await MenuRepository.findOneBy(where);
+
+    return menus;
+  }
+
+  // async getStatsByNameAndDate(name: string, date: Date) {
+  //   const menuRepository = this.dataSource.getRepository(Menu);
+  //   const menu = await menuRepository.findOne({
+  //     relations: {
+  //       stats: true,
+  //     },
+  //     where: {
+  //       name: name,
+  //       date: date,
+  //     },
+  //   });
+  //   return menu?.stats || undefined;
+  // }
+
+  async createMenu(
+    createMenuDto: CreateMenuDto,
+    stats?: MenuStats,
+  ): Promise<Menu> {
     const {
       name,
       description,
@@ -41,83 +66,70 @@ export class MenuService {
     const MenuRepository = this.dataSource.getRepository(Menu);
     const MenuStatsRepository = this.dataSource.getRepository(MenuStats);
 
-    const menuStats = new MenuStats();
-
     const menu = new Menu();
     menu.name = name;
     menu.description = description;
     menu.calories = calories;
     menu.mealType = mealType;
     menu.imageUrl = imageUrl;
-    menu.isLunchBox = isLunchBox;
+    menu.isLunchBox = false;
     menu.date = date;
-    menu.stats = menuStats;
 
-    await MenuStatsRepository.save(menuStats);
+    if (stats) {
+      menu.stats = stats;
+      this.logger.debug('이미 스탯이 있습니다.');
+    } else {
+      menu.stats = new MenuStats();
+      this.logger.debug('스탯을 생성합니다.');
+    }
+
+    await MenuStatsRepository.save(menu.stats);
     await MenuRepository.save(menu);
 
     return menu;
   }
 
-  async deleteMenuByDate(date: string) {
+  async updateMenu(
+    menu: Menu,
+    updateMenuDto: Partial<CreateMenuDto>,
+  ): Promise<Menu> {
+    const {
+      name,
+      description,
+      calories,
+      mealType,
+      imageUrl,
+      isLunchBox,
+      date,
+    } = updateMenuDto;
+
+    const MenuRepository = this.dataSource.getRepository(Menu);
+
+    if (name !== undefined) menu.name = name;
+    if (description !== undefined) menu.description = description;
+    if (calories !== undefined) menu.calories = calories;
+    if (mealType !== undefined) menu.mealType = mealType;
+    if (imageUrl !== undefined) menu.imageUrl = imageUrl;
+    if (isLunchBox !== undefined) menu.isLunchBox = isLunchBox;
+    if (date !== undefined) menu.date = date;
+
+    await MenuRepository.save(menu);
+
+    return menu;
+  }
+
+  async deleteMenuByDate(date: Date) {
     const menuRepository = this.dataSource.getRepository(Menu);
-    console.log(new Date(date));
-    const result = await menuRepository.delete({ date: new Date(date) });
+    const result = await menuRepository.delete({ date: date });
     return result.affected ? true : false;
   }
 
-  async crawlingVelog(date: string) {
-    const html = await axios.get(`${process.env.VELOG_URL}/${date}`);
-    const $ = cheerio.load(html.data);
-    const atomOneDiv = $('.atom-one');
-    const targetTag = atomOneDiv
-      .find('p')
-      .filter((i, el) => $(el).text().includes('메뉴 갯수'));
-
-    const menuCount = parseInt(targetTag.text().trim().match(/\d+$/)?.[0]);
-
-    const menus = [];
-
-    for (let i = 1; i <= menuCount; i++) {
-      menus.push({
-        name: atomOneDiv
-          .find('p')
-          .filter((_, el) => $(el).text().includes(`메뉴${i} 이름`))
-          .text()
-          .split('\n')[1],
-        mealType: atomOneDiv
-          .find('p')
-          .filter((_, el) => $(el).text().includes(`메뉴${i} 언제`))
-          .text()
-          .split('\n')[1],
-        description: atomOneDiv
-          .find('p')
-          .filter((_, el) => $(el).text().includes(`메뉴${i} 디테일`))
-          .text()
-          .split('\n')[1],
-        calories: atomOneDiv
-          .find('p')
-          .filter((_, el) => $(el).text().includes(`메뉴${i} 칼로리`))
-          .text()
-          .split('\n')[1],
-        imageUrl:
-          atomOneDiv
-            .find('p')
-            .filter((_, el) => $(el).text().includes(`메뉴${i} 이미지`))
-            .html()
-            .split('\n')
-            .at(-1)
-            ?.split('"')[1] ?? null,
-        isLunchBox:
-          atomOneDiv
-            .find('p')
-            .filter((_, el) => $(el).text().includes(`메뉴${i} 도시락`))
-            .text()
-            .split('\n')[1] === 'true',
-        date: date,
-      });
-    }
-
-    return menus;
+  async deleteMenuByNameAndDate(name: string, date: string) {
+    const menuRepository = this.dataSource.getRepository(Menu);
+    const result = await menuRepository.delete({
+      name: name,
+      date: new Date(date),
+    });
+    return result.affected ? true : false;
   }
 }

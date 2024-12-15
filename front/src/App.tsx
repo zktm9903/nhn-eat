@@ -1,25 +1,36 @@
-import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
-import { cn } from './lib/utils';
+
+import { getRandomCatGif } from './consts/catGif';
+import { CACHE_KEY } from './consts/cacheKey';
+import { Menu, MenuChartData } from './types/Menu';
+import { disLikeMenu, likeMenu, todayMenus } from './apis/menu';
+import { ImageWithPreview } from './components/ImageWithPreview';
+
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { disLikeMenu, likeMenu, todayMenus } from './apis/menu';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Menu, MenuChartData } from './types/Menu';
-import { CACHE_KEY } from './consts/cacheKey';
+import { CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
+import { Bounce, toast } from 'react-toastify';
 import { FaCheckCircle } from 'react-icons/fa';
+import { cn } from './lib/utils';
+
 import {
 	ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 } from './components/ui/chart';
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
-import { Skeleton } from './components/ui/skeleton';
-import { Bounce, toast } from 'react-toastify';
-import { getRandomCatGif } from './consts/catGif';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from './components/ui/select';
 
 const chartConfig = {
 	desktop: {
@@ -36,11 +47,19 @@ const chartConfig = {
 	},
 } satisfies ChartConfig;
 
+type MealType = 'lunch' | 'dinner';
+
 export default function Home() {
 	const queryClient = useQueryClient();
+	const [mealType, setMealType] = useState<MealType>(
+		new Date().getHours() < 15 ? 'lunch' : 'dinner',
+	);
 
 	// ------------------------------ 메뉴, 차트데이터 ------------------------------
-	const menuQuery = useQuery<Menu[]>({ queryKey: [CACHE_KEY.TODAY_MENUS], queryFn: todayMenus });
+	const menuQuery = useQuery<Menu[]>({
+		queryKey: [CACHE_KEY.TODAY_MENUS, mealType],
+		queryFn: () => todayMenus(mealType),
+	});
 	const [chartData, setChartData] = useState<MenuChartData[]>();
 
 	useEffect(() => {
@@ -56,9 +75,9 @@ export default function Home() {
 	useEffect(() => {
 		if (menuQuery.isFetching) return;
 		toast.success('데이터를 불러왔습니다.', {
-			icon: <>🐷</>,
+			icon: <img src="pop-cat.webp" className="h-auto w-6" />,
 			position: 'bottom-right',
-			autoClose: 1000,
+			autoClose: 800,
 			hideProgressBar: false,
 			closeOnClick: true,
 			pauseOnHover: true,
@@ -69,15 +88,8 @@ export default function Home() {
 		});
 	}, [menuQuery.isFetching]);
 
-	// ------------------------------ 메뉴 재요청 ------------------------------
-	const [canRefresh, setCanRefresh] = useState(true);
-
-	const reFresh = () => {
-		setCanRefresh(false);
-		queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS] });
-		setTimeout(() => {
-			setCanRefresh(true);
-		}, 3000);
+	const reFetch = () => {
+		queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
 	};
 
 	// ------------------------------ 이 사람은 투표를 했을까 ------------------------------
@@ -90,45 +102,47 @@ export default function Home() {
 	}, [menuQuery.data]);
 
 	return (
-		<div className="relative flex h-[600px] w-full flex-col scrollbar-hide">
-			<header className="flex justify-between px-2 py-2">
-				<NowDate />
-				<Button size="icon" onClick={reFresh} disabled={!canRefresh || menuQuery.isFetching}>
-					{menuQuery.isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-				</Button>
-			</header>
-			<div className="w-full flex-grow overflow-auto px-2 pb-4 scrollbar-hide">
-				{menuQuery.isFetching ? (
-					<>
-						<div className="mb-2 flex gap-2">
-							<Skeleton className="h-[240px] flex-grow rounded-xl" />
-							<Skeleton className="h-[240px] flex-grow rounded-xl" />
-						</div>
-
-						<Skeleton className="h-[240px] w-full rounded-xl" />
-					</>
-				) : (
-					<>
-						{menuQuery.data?.length ? (
-							<>
-								<div className="mb-2 grid grid-cols-2 gap-2">
-									{menuQuery.data?.map(menu => <MenuCard key={menu.id} menu={menu} />)}
-								</div>
-								<MenuChartCard menuChartData={chartData} block={block} />
-							</>
-						) : (
-							<CardDescription className="mt-10 text-center">데이터가 없습니다.</CardDescription>
-						)}
-					</>
-				)}
-			</div>
+		<div className="relative flex h-[620px] w-full flex-col scrollbar-hide">
+			<Tabs defaultValue="menu" className="flex h-full w-full flex-col">
+				<header className="flex w-full items-center justify-between p-2">
+					<div className="flex items-center gap-2">
+						<NowDate />
+						<TabsList>
+							<TabsTrigger value="menu">메뉴</TabsTrigger>
+							<TabsTrigger value="statistics">통계</TabsTrigger>
+						</TabsList>
+						<Select value={mealType} onValueChange={v => setMealType(v as MealType)}>
+							<SelectTrigger className="w-[80px]">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="lunch">점심</SelectItem>
+								<SelectItem value="dinner">저녁</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+					<Button size="icon" onClick={reFetch}>
+						{menuQuery.isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+					</Button>
+				</header>
+				<main className="flex-grow px-2 pb-2">
+					<TabsContent value="menu" className="mt-0 grid grid-cols-2 gap-2">
+						{menuQuery.data &&
+							menuQuery.data?.map(menu => <MenuCard key={menu.id} menu={menu} reFetch={reFetch} />)}
+					</TabsContent>
+					<TabsContent value="statistics" className="mt-0">
+						<MenuChartCard menuChartData={chartData} block={block} mealType={mealType} />
+					</TabsContent>
+				</main>
+			</Tabs>
 		</div>
 	);
 }
 
-function MenuCard({ menu }: { menu: Menu }) {
-	const queryClient = useQueryClient();
+function MenuCard({ menu, reFetch }: { menu: Menu; reFetch: () => void }) {
 	const [cat, setCat] = useState('');
+
+	const [liked, setLiked] = useState(menu.user.liked);
 
 	useEffect(() => {
 		setCat(getRandomCatGif());
@@ -136,24 +150,22 @@ function MenuCard({ menu }: { menu: Menu }) {
 
 	const likeMenuMutation = useMutation({
 		mutationFn: likeMenu,
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS] });
-		},
+		onSuccess: reFetch,
 	});
 
 	const disLikeMenuMutation = useMutation({
 		mutationFn: disLikeMenu,
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS] });
-		},
+		onSuccess: reFetch,
 	});
 
 	const likeOrDisLike = () => {
-		if (menu.user.liked) {
+		if (liked) {
 			disLikeMenuMutation.mutate(menu.id + '');
+			setLiked(false);
 			return;
 		}
 		likeMenuMutation.mutate(menu.id + '');
+		setLiked(true);
 	};
 
 	return (
@@ -163,14 +175,19 @@ function MenuCard({ menu }: { menu: Menu }) {
 					<CardTitle className="mr-2 text-[1rem]">{menu.name}</CardTitle>
 					<CardDescription>{menu.calories}kcal</CardDescription>
 				</div>
-				{menu.user.liked && <FaCheckCircle className="relative top-[-2px] text-green-700" />}
+				{liked && <FaCheckCircle className="relative top-[-2px] text-green-700" />}
 			</CardHeader>
 			<CardContent className="pb-6">
 				<CardDescription className="mb-2 h-10">{menu.description}</CardDescription>
 				{menu.imageUrl ? (
 					<img src={menu.imageUrl} className="h-[140px] w-full rounded-sm object-cover" />
 				) : (
-					<img src={cat} className="h-[140px] w-full rounded-sm object-cover" />
+					<ImageWithPreview
+						delay={3000}
+						placeholder="/no-image.webp"
+						src={cat}
+						className="h-[140px] w-full rounded-sm object-cover"
+					/>
 				)}
 			</CardContent>
 		</Card>
@@ -180,14 +197,16 @@ function MenuCard({ menu }: { menu: Menu }) {
 function MenuChartCard({
 	menuChartData,
 	block,
+	mealType,
 }: {
 	menuChartData?: MenuChartData[];
 	block?: boolean;
+	mealType: MealType;
 }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-[1rem]">오늘의 메뉴</CardTitle>
+				<CardTitle className="text-[1rem]">{`오늘의 ${mealType === 'lunch' ? '점심' : '저녁'} 메뉴`}</CardTitle>
 				<CardDescription>현재 투표 수</CardDescription>
 			</CardHeader>
 			<CardContent className="relative">
@@ -198,7 +217,7 @@ function MenuChartCard({
 						</CardTitle>
 					</div>
 				)}
-				<ChartContainer config={chartConfig} className="h-[200px]">
+				<ChartContainer config={chartConfig} className="h-[200px] w-full">
 					<BarChart
 						accessibilityLayer
 						data={menuChartData}

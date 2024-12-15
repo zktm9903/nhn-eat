@@ -4,6 +4,7 @@ services:
     image: postgres:15.2-alpine
     container_name: postgres
     environment:
+      TZ: Asia/Seoul
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: nhn-eat-app
@@ -32,6 +33,17 @@ services:
       DATABASE_MAX_CONNECTION: 100
       ADMIN_TOKEN: admin123
       VELOG_URL: https://velog.io/@looksgood99
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - nestjs
 
 volumes:
   postgres-data:

@@ -8,6 +8,9 @@ import { UserMenusModule } from './user-menus/user-menus.module';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { CrawlingModule } from './crawling/crawling.module';
+import { BatchTaskModule } from './batch-task/batch-task.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -24,9 +27,13 @@ import { join } from 'path';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../static'),
     }),
+    ScheduleModule.forRoot(),
+    BatchTaskModule,
     MenuModule,
     UserModule,
     UserMenusModule,
+    CrawlingModule,
+    BatchTaskModule,
   ],
   controllers: [],
   providers: [],

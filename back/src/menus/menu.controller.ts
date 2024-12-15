@@ -16,6 +16,7 @@ import { UserMenusService } from 'src/user-menus/user-menus.service';
 import { UserService } from 'src/users/user.service';
 import { Menu } from './entity/menu.entity';
 import { UserMenu } from 'src/user-menus/entity/user-menus.entity';
+import { MealType } from './enum/meal-type.enum';
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -42,8 +43,10 @@ export class MenuController {
   @Get('/today')
   async getMenus(@Req() request: Request) {
     const uid = request.headers['authorization'];
+    const mealType = request.query['mealType'] as MealType;
 
-    const menus: MenuWithUserStatus[] = await this.menuService.getTodayMenus();
+    const menus: MenuWithUserStatus[] =
+      await this.menuService.getTodayMenus(mealType);
 
     for (const menu of menus) {
       let userMenu = await this.userMenusService.getUserMenu(uid, menu.id);
@@ -86,22 +89,5 @@ export class MenuController {
     await this.userMenusService.likeMenu(userMenu, +menuId, false);
 
     return 'success';
-  }
-
-  @Post('/crawling/velog')
-  async insertMenusFromVelog(@Req() request: Request) {
-    const date = request.query.date as string;
-    const success = await this.menuService.deleteMenuByDate(date);
-    if (success) console.log('-----------delete success', date);
-    const menus = await this.menuService.crawlingVelog(date);
-    if (!menus.length)
-      throw new HttpException('Forbidden', HttpStatus.FAILED_DEPENDENCY);
-
-    for (let i = 0; i < menus.length; i++) {
-      await this.menuService.createMenu(menus[i]);
-      console.log(menus[i]);
-    }
-
-    return menus;
   }
 }
