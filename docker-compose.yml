@@ -23,6 +23,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      TZ: Asia/Seoul
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_USERNAME: postgres

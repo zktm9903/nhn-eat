@@ -107,10 +107,6 @@ export default function Home() {
 				<header className="flex w-full items-center justify-between p-2">
 					<div className="flex items-center gap-2">
 						<NowDate />
-						<TabsList>
-							<TabsTrigger value="menu">메뉴</TabsTrigger>
-							<TabsTrigger value="statistics">통계</TabsTrigger>
-						</TabsList>
 						<Select value={mealType} onValueChange={v => setMealType(v as MealType)}>
 							<SelectTrigger className="w-[80px]">
 								<SelectValue />
@@ -120,6 +116,10 @@ export default function Home() {
 								<SelectItem value="dinner">저녁</SelectItem>
 							</SelectContent>
 						</Select>
+						<TabsList>
+							<TabsTrigger value="menu">메뉴</TabsTrigger>
+							<TabsTrigger value="statistics">통계</TabsTrigger>
+						</TabsList>
 					</div>
 					<Button size="icon" onClick={reFetch}>
 						{menuQuery.isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
