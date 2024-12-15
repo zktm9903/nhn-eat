@@ -32,7 +32,6 @@ services:
       DATABASE_DROPSCHEMA: "false"
       DATABASE_MAX_CONNECTION: 100
       ADMIN_TOKEN: admin123
-      VELOG_URL: https://velog.io/@looksgood99
 
   nginx:
     image: nginx:latest
@@ -41,9 +40,9 @@ services:
       - "443:443"
     volumes:
       - ./nginx/conf:/etc/nginx/conf.d
-      - ./certs:/etc/nginx/certs
+      - ../certs:/etc/nginx/certs
     depends_on:
-      - nestjs
+      - back
 
 volumes:
   postgres-data:
