@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression, Interval } from '@nestjs/schedule';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { CrawlingService } from 'src/crawling/crawling.service';
 import { MealType } from 'src/menus/enum/meal-type.enum';
 import { MenuService } from 'src/menus/menu.service';
 
 @Injectable()
-export class BatchTaskService {
+export class BatchTaskService implements OnModuleInit {
   constructor(
     private crawlingService: CrawlingService,
     private menuService: MenuService,
@@ -13,22 +13,29 @@ export class BatchTaskService {
 
   private readonly logger = new Logger(BatchTaskService.name);
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  handleCron() {
-    this.logger.debug('Cron job executed at midnight');
+  async onModuleInit() {
+    setTimeout(async () => {
+      await this.batchCrawling();
+    }, 3000);
   }
 
-  @Cron('0 0-10 * * 1-5')
+  @Cron('0 0-10 * * 1-5', {
+    timeZone: 'Asia/Seoul',
+  })
   async nightJob() {
     await this.batchCrawling();
   }
 
-  @Cron('*/3 10-13 * * 1-5')
+  @Cron('*/3 10-13 * * 1-5', {
+    timeZone: 'Asia/Seoul',
+  })
   async lunchJob() {
     await this.batchCrawling();
   }
 
-  @Cron('*/3 17-18 * * 1-5')
+  @Cron('*/3 17-18 * * 1-5', {
+    timeZone: 'Asia/Seoul',
+  })
   async dinnerJob() {
     await this.batchCrawling();
   }
