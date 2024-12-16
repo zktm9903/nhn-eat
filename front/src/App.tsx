@@ -7,7 +7,7 @@ import { disLikeMenu, likeMenu, todayMenus } from './apis/menu';
 import { ImageWithPreview } from './components/ImageWithPreview';
 
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, tr } from 'date-fns/locale';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
@@ -101,6 +101,41 @@ export default function Home() {
 		setBlock(picked);
 	}, [menuQuery.data]);
 
+	// ------------------------------ 좋아요는 오직 하나 ------------------------------
+
+	const likeMenuMutation = useMutation({
+		mutationFn: likeMenu,
+	});
+
+	const disLikeMenuMutation = useMutation({
+		mutationFn: disLikeMenu,
+	});
+
+	const like = async (menuId: string) => {
+		if (!menuQuery.data) return;
+		try {
+			await likeMenuMutation.mutateAsync(menuId);
+			for (const menu of menuQuery.data) {
+				if (menu.id + '' === menuId) continue;
+				if (menu.user.liked) {
+					await disLikeMenuMutation.mutateAsync(menu.id + '');
+				}
+			}
+			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
+		} catch (err) {
+			console.log(err);
+		}
+	};
+
+	const dislike = async (menuId: string) => {
+		try {
+			await disLikeMenuMutation.mutateAsync(menuId);
+			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
+		} catch (err) {
+			console.log(err);
+		}
+	};
+
 	return (
 		<div className="relative flex h-[620px] w-full flex-col scrollbar-hide">
 			<Tabs defaultValue="menu" className="flex h-full w-full flex-col">
@@ -128,7 +163,9 @@ export default function Home() {
 				<main className="flex-grow px-2 pb-2">
 					<TabsContent value="menu" className="mt-0 grid grid-cols-2 gap-2">
 						{menuQuery.data &&
-							menuQuery.data?.map(menu => <MenuCard key={menu.id} menu={menu} reFetch={reFetch} />)}
+							menuQuery.data?.map(menu => (
+								<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
+							))}
 					</TabsContent>
 					<TabsContent value="statistics" className="mt-0">
 						<MenuChartCard menuChartData={chartData} block={block} mealType={mealType} />
@@ -139,43 +176,37 @@ export default function Home() {
 	);
 }
 
-function MenuCard({ menu, reFetch }: { menu: Menu; reFetch: () => void }) {
+function MenuCard({
+	menu,
+	like,
+	dislike,
+}: {
+	menu: Menu;
+	like: (menuId: string) => Promise<void>;
+	dislike: (menuId: string) => Promise<void>;
+}) {
 	const [cat, setCat] = useState('');
-
-	const [liked, setLiked] = useState(menu.user.liked);
 
 	useEffect(() => {
 		setCat(getRandomCatGif());
 	}, []);
 
-	const likeMenuMutation = useMutation({
-		mutationFn: likeMenu,
-		onSuccess: reFetch,
-	});
-
-	const disLikeMenuMutation = useMutation({
-		mutationFn: disLikeMenu,
-		onSuccess: reFetch,
-	});
-
-	const likeOrDisLike = () => {
-		if (liked) {
-			disLikeMenuMutation.mutate(menu.id + '');
-			setLiked(false);
+	const likeOrDislike = () => {
+		if (menu.user.liked) {
+			dislike(menu.id + '');
 			return;
 		}
-		likeMenuMutation.mutate(menu.id + '');
-		setLiked(true);
+		like(menu.id + '');
 	};
 
 	return (
-		<Card key={menu.id} onClick={likeOrDisLike} className="flex w-full flex-col hover:bg-zinc-100">
+		<Card key={menu.id} onClick={likeOrDislike} className="flex w-full flex-col hover:bg-zinc-100">
 			<CardHeader className="flex flex-row items-center justify-between pb-2">
 				<div className="flex items-center">
 					<CardTitle className="mr-2 text-[1rem]">{menu.name}</CardTitle>
 					<CardDescription>{menu.calories}kcal</CardDescription>
 				</div>
-				{liked && <FaCheckCircle className="relative top-[-2px] text-green-700" />}
+				{menu.user.liked && <FaCheckCircle className="relative top-[-2px] text-green-700" />}
 			</CardHeader>
 			<CardContent className="pb-6">
 				<CardDescription className="mb-2 h-10">{menu.description}</CardDescription>

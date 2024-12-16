@@ -18,10 +18,11 @@ export class BatchTaskService {
     this.logger.debug('Cron job executed at midnight');
   }
 
-  @Cron('0 2 * * 1-5')
-  async nightJob() {
-    await this.batchCrawling();
-  }
+  //   @Cron('0 2 * * 1-5')
+  //   @Interval(100000)
+  //   async nightJob() {
+  //     await this.batchCrawling();
+  //   }
 
   @Cron('*/3 10-13 * * 1-5')
   async lunchJob() {

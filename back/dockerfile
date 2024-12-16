@@ -40,10 +40,13 @@ USER node
 # PRODUCTION
 ###################
 
-FROM node:18-alpine As production
+FROM node:18-slim As production
 
-COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
-COPY --chown=node:node --from=build /usr/src/app/dist ./dist
-COPY --chown=node:node --from=build /usr/src/app/static ./static
+RUN npx -y playwright@1.49.1 install --with-deps
 
-CMD [ "node", "dist/main.js" ]
+WORKDIR /usr/src/app
+
+COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/dist ./dist
+
+CMD ["node", "dist/main.js"]

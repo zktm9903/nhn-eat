@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, In, Not } from 'typeorm';
 import { UserMenu } from './entity/user-menus.entity';
 import { Menu } from 'src/menus/entity/menu.entity';
 import { User } from 'src/users/entity/user.entity';
@@ -36,23 +36,44 @@ export class UserMenusService {
     return userMenu;
   }
 
-  async likeMenu(userMenu: UserMenu, menuId: number, liked: UserMenu['liked']) {
-    const MenuRepository = this.dataSource.getRepository(Menu);
+  async likeMenu(uid: string, menuId: number) {
+    const menuRepository = this.dataSource.getRepository(Menu);
+    const userMenuRepository = this.dataSource.getRepository(UserMenu);
 
     await this.dataSource.transaction(async (manager) => {
-      await manager.save(UserMenu, { ...userMenu, liked: liked });
-      const menu = await MenuRepository.findOne({
+      const userMenu = await userMenuRepository.findOneBy({
+        user: { id: uid },
+        menu: { id: menuId },
+      });
+      await manager.save(UserMenu, { ...userMenu, liked: true });
+      const menu = await menuRepository.findOne({
         relations: {
           stats: true,
         },
         where: { id: menuId },
       });
-      await manager.increment(
-        MenuStats,
-        { id: menu.stats.id },
-        'liked',
-        liked ? 1 : -1,
-      );
+      await manager.increment(MenuStats, { id: menu.stats.id }, 'liked', 1);
+    });
+    return 'success';
+  }
+
+  async dislikeMenu(uid: string, menuId: number) {
+    const menuRepository = this.dataSource.getRepository(Menu);
+    const userMenuRepository = this.dataSource.getRepository(UserMenu);
+
+    await this.dataSource.transaction(async (manager) => {
+      const userMenu = await userMenuRepository.findOneBy({
+        user: { id: uid },
+        menu: { id: menuId },
+      });
+      await manager.save(UserMenu, { ...userMenu, liked: false });
+      const menu = await menuRepository.findOne({
+        relations: {
+          stats: true,
+        },
+        where: { id: menuId },
+      });
+      await manager.increment(MenuStats, { id: menu.stats.id }, 'liked', -1);
     });
     return 'success';
   }

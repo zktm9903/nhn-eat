@@ -68,11 +68,7 @@ export class MenuController {
     const menuId = request.params.menuId;
     const uid = request.headers['authorization'];
 
-    const userMenu = await this.userMenusService.getUserMenu(
-      uid,
-      parseInt(menuId),
-    );
-    await this.userMenusService.likeMenu(userMenu, +menuId, true);
+    await this.userMenusService.likeMenu(uid, +menuId);
 
     return 'success';
   }
@@ -82,11 +78,7 @@ export class MenuController {
     const menuId = request.params.menuId;
     const uid = request.headers['authorization'];
 
-    const userMenu = await this.userMenusService.getUserMenu(
-      uid,
-      parseInt(menuId),
-    );
-    await this.userMenusService.likeMenu(userMenu, +menuId, false);
+    await this.userMenusService.dislikeMenu(uid, +menuId);
 
     return 'success';
   }
