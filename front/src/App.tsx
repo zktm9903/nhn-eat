@@ -7,7 +7,7 @@ import { disLikeMenu, likeMenu, todayMenus } from './apis/menu';
 import { ImageWithPreview } from './components/ImageWithPreview';
 
 import { format } from 'date-fns';
-import { ko, tr } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
@@ -121,9 +121,10 @@ export default function Home() {
 					await disLikeMenuMutation.mutateAsync(menu.id + '');
 				}
 			}
-			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
 		} catch (err) {
 			console.log(err);
+		} finally {
+			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
 		}
 	};
 
@@ -186,21 +187,34 @@ function MenuCard({
 	dislike: (menuId: string) => Promise<void>;
 }) {
 	const [cat, setCat] = useState('');
+	const [block, setBlock] = useState(false);
 
 	useEffect(() => {
 		setCat(getRandomCatGif());
 	}, []);
 
-	const likeOrDislike = () => {
+	const likeOrDislike = async () => {
+		setBlock(true);
 		if (menu.user.liked) {
-			dislike(menu.id + '');
-			return;
+			await dislike(menu.id + '');
+		} else {
+			await like(menu.id + '');
 		}
-		like(menu.id + '');
+		setBlock(false);
 	};
 
 	return (
-		<Card key={menu.id} onClick={likeOrDislike} className="flex w-full flex-col hover:bg-zinc-100">
+		<Card
+			key={menu.id}
+			onClick={
+				block
+					? () => {
+							console.log('갈기지 마세요');
+						}
+					: likeOrDislike
+			}
+			className="flex w-full flex-col hover:bg-zinc-100"
+		>
 			<CardHeader className="flex flex-row items-center justify-between pb-2">
 				<div className="flex items-center">
 					<CardTitle className="mr-2 text-[1rem]">{menu.name}</CardTitle>

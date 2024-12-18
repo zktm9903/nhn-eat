@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataSource, In, Not } from 'typeorm';
 import { UserMenu } from './entity/user-menus.entity';
 import { Menu } from 'src/menus/entity/menu.entity';
@@ -45,6 +45,7 @@ export class UserMenusService {
         user: { id: uid },
         menu: { id: menuId },
       });
+      if (userMenu.liked) throw new BadRequestException();
       await manager.save(UserMenu, { ...userMenu, liked: true });
       const menu = await menuRepository.findOne({
         relations: {
@@ -66,6 +67,7 @@ export class UserMenusService {
         user: { id: uid },
         menu: { id: menuId },
       });
+      if (!userMenu.liked) throw new BadRequestException();
       await manager.save(UserMenu, { ...userMenu, liked: false });
       const menu = await menuRepository.findOne({
         relations: {
