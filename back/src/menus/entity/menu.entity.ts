@@ -1,10 +1,12 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { MealType } from '../enum/meal-type.enum';
 import { MenuStats } from './menu-stats.entity';
@@ -38,6 +40,12 @@ export class Menu extends BaseEntity {
 
   @Column({ type: 'date' })
   date: Date;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @OneToOne(() => MenuStats)
   @JoinColumn()

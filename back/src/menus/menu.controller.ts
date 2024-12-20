@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpException,
-  HttpStatus,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -34,11 +25,6 @@ export class MenuController {
     private readonly userService: UserService,
     private readonly userMenusService: UserMenusService,
   ) {}
-
-  @Post()
-  getTest(@Body() createMenuDto: CreateMenuDto) {
-    return this.menuService.createMenu(createMenuDto);
-  }
 
   @Get('/today')
   async getMenus(@Req() request: Request) {
