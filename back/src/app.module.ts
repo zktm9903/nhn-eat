@@ -11,6 +11,7 @@ import { join } from 'path';
 import { CrawlingModule } from './crawling/crawling.module';
 import { BatchTaskModule } from './batch-task/batch-task.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ImageModule } from './images/image.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     UserMenusModule,
     CrawlingModule,
     BatchTaskModule,
+    ImageModule,
   ],
   controllers: [],
   providers: [],

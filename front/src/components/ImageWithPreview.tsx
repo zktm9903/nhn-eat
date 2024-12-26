@@ -7,18 +7,25 @@ interface ImageWithPreviewProps extends React.ImgHTMLAttributes<HTMLImageElement
 }
 
 export const ImageWithPreview = ({ placeholder, src, delay, ...props }: ImageWithPreviewProps) => {
-	const [currentSrc, setCurrentSrc] = useState(placeholder);
+	const [mount, setMount] = useState(false);
 
 	useEffect(() => {
 		setTimeout(() => {
 			const image = new Image();
 			image.src = src;
-			console.log(src);
 			image.onload = () => {
-				setCurrentSrc(src);
+				setMount(true);
 			};
 		}, delay);
 	}, [src]);
 
-	return <img {...props} id="preview-image" src={currentSrc} alt="cat" />;
+	return (
+		<>
+			{mount ? (
+				<img {...props} id="real-image" src={src} alt="catOrDog" />
+			) : (
+				<img {...props} id="preview-image" src={placeholder} alt="catOrDog" />
+			)}
+		</>
+	);
 };

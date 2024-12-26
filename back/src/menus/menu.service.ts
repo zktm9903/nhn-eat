@@ -10,12 +10,12 @@ export class MenuService {
   constructor(private dataSource: DataSource) {}
   private readonly logger = new Logger(MenuService.name);
 
-  async getTodayMenus(mealType: MealType): Promise<Menu[]> {
+  async getMenus(mealType: MealType, date: string): Promise<Menu[]> {
     const MenuRepository = this.dataSource.getRepository(Menu);
     const menus = await MenuRepository.find({
       where: {
         mealType: mealType,
-        date: new Date(),
+        date: new Date(date),
       },
       relations: {
         stats: true,
@@ -26,6 +26,25 @@ export class MenuService {
     });
 
     return menus;
+  }
+
+  async getAvailableDates(): Promise<string[]> {
+    const MenuRepository = this.dataSource.getRepository(Menu);
+
+    const result = await MenuRepository.createQueryBuilder('menu')
+      .select('DISTINCT menu.date', 'date')
+      .orderBy('menu.date', 'ASC')
+      .getRawMany();
+
+    const availableDates = result.map((row) => {
+      const date = new Date(row.date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    });
+
+    return availableDates;
   }
 
   async findOne(where: FindOptionsWhere<Menu> | FindOptionsWhere<Menu>[]) {
@@ -72,7 +91,7 @@ export class MenuService {
     menu.calories = calories;
     menu.mealType = mealType;
     menu.imageUrl = imageUrl;
-    menu.isLunchBox = false;
+    menu.isLunchBox = isLunchBox;
     menu.date = date;
 
     if (stats) {

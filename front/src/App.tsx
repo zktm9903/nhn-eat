@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
-import { getRandomCatGif } from './consts/catGif';
 import { CACHE_KEY } from './consts/cacheKey';
 import { Menu, MenuChartData } from './types/Menu';
-import { disLikeMenu, likeMenu, todayMenus } from './apis/menu';
+import { disLikeMenu, likeMenu, getMenus, getDates } from './apis/menu';
 import { ImageWithPreview } from './components/ImageWithPreview';
 
 import { format } from 'date-fns';
@@ -12,7 +11,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 import { Bounce, toast } from 'react-toastify';
-import { FaCheckCircle } from 'react-icons/fa';
 import { cn } from './lib/utils';
 
 import {
@@ -31,16 +29,24 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from './components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
+import { Calendar } from './components/ui/calendar';
+import { Badge } from './components/ui/badge';
+import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from './components/ui/drawer';
+import { AnimalContext } from './components/AnimalImageProvider';
 
 const chartConfig = {
 	desktop: {
 		label: 'Desktop',
-		// color: 'hsl(var(--chart-5))',
 		color: '#18181B',
-	},
-	mobile: {
-		label: 'Mobile',
-		color: 'hsl(var(--chart-2))',
 	},
 	label: {
 		color: 'hsl(var(--background))',
@@ -51,14 +57,16 @@ type MealType = 'lunch' | 'dinner';
 
 export default function Home() {
 	const queryClient = useQueryClient();
+
+	const [date, setDate] = useState<Date | undefined>(new Date()); // date : 2024-12-26
 	const [mealType, setMealType] = useState<MealType>(
 		new Date().getHours() < 15 ? 'lunch' : 'dinner',
 	);
 
 	// ------------------------------ 메뉴, 차트데이터 ------------------------------
 	const menuQuery = useQuery<Menu[]>({
-		queryKey: [CACHE_KEY.TODAY_MENUS, mealType],
-		queryFn: () => todayMenus(mealType),
+		queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date],
+		queryFn: () => getMenus(mealType, format(date ?? '', 'yyyy-MM-dd')),
 	});
 	const [chartData, setChartData] = useState<MenuChartData[]>();
 
@@ -89,7 +97,7 @@ export default function Home() {
 	}, [menuQuery.isFetching]);
 
 	const reFetch = () => {
-		queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
+		queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date] });
 	};
 
 	// ------------------------------ 이 사람은 투표를 했을까 ------------------------------
@@ -124,25 +132,25 @@ export default function Home() {
 		} catch (err) {
 			console.log(err);
 		} finally {
-			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
+			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date] });
 		}
 	};
 
 	const dislike = async (menuId: string) => {
 		try {
 			await disLikeMenuMutation.mutateAsync(menuId);
-			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType] });
+			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date] });
 		} catch (err) {
 			console.log(err);
 		}
 	};
 
 	return (
-		<div className="relative flex h-[620px] w-full flex-col scrollbar-hide">
+		<div className="relative flex h-[600px] w-full flex-col scrollbar-hide">
 			<Tabs defaultValue="menu" className="flex h-full w-full flex-col">
 				<header className="flex w-full items-center justify-between p-2">
 					<div className="flex items-center gap-2">
-						<NowDate />
+						<DateBox date={date} setDate={setDate} />
 						<Select value={mealType} onValueChange={v => setMealType(v as MealType)}>
 							<SelectTrigger className="w-[80px]">
 								<SelectValue />
@@ -156,17 +164,32 @@ export default function Home() {
 							<TabsTrigger value="menu">메뉴</TabsTrigger>
 							<TabsTrigger value="statistics">통계</TabsTrigger>
 						</TabsList>
+						<AnimalBox />
 					</div>
+					<div></div>
+
 					<Button size="icon" onClick={reFetch}>
 						{menuQuery.isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
 					</Button>
 				</header>
-				<main className="flex-grow px-2 pb-2">
-					<TabsContent value="menu" className="mt-0 grid grid-cols-2 gap-2">
-						{menuQuery.data &&
-							menuQuery.data?.map(menu => (
-								<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
-							))}
+				<main className="flex-grow overflow-auto px-2 pb-2">
+					<TabsContent value="menu" className="mt-0">
+						<div className="mb-2 mt-0 grid grid-cols-2 gap-2">
+							{menuQuery.data &&
+								menuQuery.data
+									?.filter(menu => !menu.isLunchBox)
+									.map(menu => (
+										<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
+									))}
+						</div>
+						<div className="flex flex-col gap-2">
+							{menuQuery.data &&
+								menuQuery.data
+									?.filter(menu => menu.isLunchBox)
+									.map(menu => (
+										<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
+									))}
+						</div>
 					</TabsContent>
 					<TabsContent value="statistics" className="mt-0">
 						<MenuChartCard menuChartData={chartData} block={block} mealType={mealType} />
@@ -174,6 +197,92 @@ export default function Home() {
 				</main>
 			</Tabs>
 		</div>
+	);
+}
+
+function DateBox({
+	date,
+	setDate,
+}: {
+	date: Date | undefined;
+	setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
+}) {
+	const [isOpen, setIsOpen] = useState(false);
+
+	const handleDateChange = (selectedDate: Date | undefined) => {
+		setDate(selectedDate);
+		setIsOpen(false);
+	};
+
+	const datesQuery = useQuery({ queryKey: [CACHE_KEY.DATES], queryFn: () => getDates() });
+
+	return (
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
+			<PopoverTrigger asChild>
+				<Button
+					variant={'outline'}
+					className={cn(
+						'w-[240px] justify-start text-left font-normal',
+						!date && 'text-muted-foreground',
+					)}
+				>
+					<CalendarIcon />
+					{date ? format(date, 'yyyy년 MM월 dd일 eeee', { locale: ko }) : '날짜를 선택하세요'}
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent className="w-auto p-0" align="start">
+				<Calendar
+					mode="single"
+					selected={date}
+					onSelect={handleDateChange}
+					initialFocus
+					disabled={{ dayOfWeek: [0, 6] }}
+					modifiers={{
+						selectable: datesQuery.data ? datesQuery.data.map(date => new Date(date)) : [],
+					}}
+					modifiersStyles={{
+						selectable: {
+							fontWeight: 'bold',
+
+							border: 'solid 1px rgb(228 228 231 / var(--tw-bg-opacity, 1)',
+						},
+					}}
+				/>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+function AnimalBox() {
+	const { animal, setAnimal } = useContext(AnimalContext);
+	return (
+		<Drawer>
+			<DrawerTrigger asChild>
+				<Button variant="outline">{animal === 'cat' ? '고양이' : '강아지'}</Button>
+			</DrawerTrigger>
+			<DrawerContent>
+				<DrawerHeader>
+					<DrawerTitle>정말 바꾸십니까 신중히 골라주세요.</DrawerTitle>
+					<DrawerDescription>동물 사진 제보 받습니다.</DrawerDescription>
+				</DrawerHeader>
+				<DrawerClose className="mb-[32px] flex justify-center gap-3">
+					<img
+						src={
+							'https://velog.velcdn.com/images/looksgood99/post/33d5bc4d-ddf0-4d38-8883-78f5756c1708/image.png'
+						}
+						className="aspect-square h-auto w-[200px] cursor-pointer rounded-lg duration-200 hover:scale-105"
+						onClick={() => setAnimal('cat')}
+					/>
+					<img
+						src={
+							'https://velog.velcdn.com/images/looksgood99/post/dda487f2-6fd0-4417-81a2-89b73c140bc3/image.png'
+						}
+						className="aspect-square h-auto w-[200px] cursor-pointer rounded-lg duration-200 hover:scale-105"
+						onClick={() => setAnimal('dog')}
+					/>
+				</DrawerClose>
+			</DrawerContent>
+		</Drawer>
 	);
 }
 
@@ -186,12 +295,8 @@ function MenuCard({
 	like: (menuId: string) => Promise<void>;
 	dislike: (menuId: string) => Promise<void>;
 }) {
-	const [cat, setCat] = useState('');
+	const { animal, animalImages } = useContext(AnimalContext);
 	const [block, setBlock] = useState(false);
-
-	useEffect(() => {
-		setCat(getRandomCatGif());
-	}, []);
 
 	const likeOrDislike = async () => {
 		setBlock(true);
@@ -213,28 +318,39 @@ function MenuCard({
 						}
 					: likeOrDislike
 			}
-			className="flex w-full flex-col hover:bg-zinc-100"
+			className={`flex w-full flex-col hover:bg-zinc-100 ${menu.user.liked && 'border-[2px] border-zinc-800'}`}
 		>
-			<CardHeader className="flex flex-row items-center justify-between pb-2">
-				<div className="flex items-center">
-					<CardTitle className="mr-2 text-[1rem]">{menu.name}</CardTitle>
-					<CardDescription>{menu.calories}kcal</CardDescription>
+			<CardHeader
+				className={`flex flex-row items-center justify-between pb-2 ${menu.isLunchBox && 'pb-6'}`}
+			>
+				<div className="w-full">
+					<CardTitle className="mb-1 text-[1rem]">{menu.name}</CardTitle>
+					<div className="flex w-full justify-between">
+						<CardDescription>{menu.calories}kcal</CardDescription>
+						{menu.isLunchBox && <Badge>도시락</Badge>}
+					</div>
+
+					{!menu.isLunchBox && (
+						<CardDescription className="mb-2 mt-1 h-10">{menu.description}</CardDescription>
+					)}
 				</div>
-				{menu.user.liked && <FaCheckCircle className="relative top-[-2px] text-green-700" />}
 			</CardHeader>
-			<CardContent className="pb-6">
-				<CardDescription className="mb-2 h-10">{menu.description}</CardDescription>
-				{menu.imageUrl ? (
-					<img src={menu.imageUrl} className="h-[140px] w-full rounded-sm object-cover" />
-				) : (
-					<ImageWithPreview
-						delay={3000}
-						placeholder="/no-image.webp"
-						src={cat}
-						className="h-[140px] w-full rounded-sm object-cover"
-					/>
-				)}
-			</CardContent>
+			{!menu.isLunchBox && (
+				<CardContent className="pb-6">
+					{menu.imageUrl ? (
+						<img src={menu.imageUrl} className="h-[140px] w-full rounded-sm object-cover" />
+					) : (
+						<ImageWithPreview
+							delay={3000}
+							placeholder={`/no-image-${animal}.webp`}
+							src={
+								animalImages ? animalImages[Math.floor(Math.random() * animalImages.length)] : ''
+							}
+							className="h-[140px] w-full rounded-sm object-cover"
+						/>
+					)}
+				</CardContent>
+			)}
 		</Card>
 	);
 }
@@ -256,13 +372,13 @@ function MenuChartCard({
 			</CardHeader>
 			<CardContent className="relative">
 				{block && (
-					<div className="absolute bottom-0 left-0 right-0 top-[-20px] z-10 flex justify-end backdrop-blur">
-						<CardTitle className="black relative top-[-44px] mr-6 text-right text-[1rem] text-red-700">
-							메뉴를 골라주세요.
+					<div className="absolute bottom-0 left-0 right-0 top-[-20px] z-10 flex items-center justify-center bg-white">
+						<CardTitle className="text-center text-[1rem] text-red-700">
+							메뉴를 골라주세요
 						</CardTitle>
 					</div>
 				)}
-				<ChartContainer config={chartConfig} className="h-[200px] w-full">
+				<ChartContainer config={chartConfig} className="h-[350px] w-full">
 					<BarChart
 						accessibilityLayer
 						data={menuChartData}
@@ -303,14 +419,5 @@ function MenuChartCard({
 				</ChartContainer>
 			</CardContent>
 		</Card>
-	);
-}
-
-function NowDate() {
-	return (
-		<Button variant={'outline'} className={cn('w-auto justify-start text-left font-normal')}>
-			<CalendarIcon />
-			{format(new Date(), 'yyyy년 MM월 dd일 eeee', { locale: ko })}
-		</Button>
 	);
 }

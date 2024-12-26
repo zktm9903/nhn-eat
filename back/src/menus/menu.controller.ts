@@ -1,6 +1,5 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { MenuService } from './menu.service';
-import { CreateMenuDto } from './dto/create-menu.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Request } from 'express';
 import { UserMenusService } from 'src/user-menus/user-menus.service';
@@ -8,10 +7,6 @@ import { UserService } from 'src/users/user.service';
 import { Menu } from './entity/menu.entity';
 import { UserMenu } from 'src/user-menus/entity/user-menus.entity';
 import { MealType } from './enum/meal-type.enum';
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 type MenuWithUserStatus = Menu & {
   user?: Pick<UserMenu, 'id' | 'liked'>;
@@ -26,13 +21,16 @@ export class MenuController {
     private readonly userMenusService: UserMenusService,
   ) {}
 
-  @Get('/today')
+  @Get('')
   async getMenus(@Req() request: Request) {
     const uid = request.headers['authorization'];
+    const date = request.query['date'] as string;
     const mealType = request.query['mealType'] as MealType;
 
-    const menus: MenuWithUserStatus[] =
-      await this.menuService.getTodayMenus(mealType);
+    const menus: MenuWithUserStatus[] = await this.menuService.getMenus(
+      mealType,
+      date,
+    );
 
     for (const menu of menus) {
       let userMenu = await this.userMenusService.getUserMenu(uid, menu.id);
@@ -47,6 +45,12 @@ export class MenuController {
     }
 
     return menus;
+  }
+
+  @Get('/dates')
+  async getDates() {
+    const dates = await this.menuService.getAvailableDates();
+    return dates;
   }
 
   @Post('/:menuId/like')
