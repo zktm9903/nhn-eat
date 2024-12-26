@@ -40,9 +40,7 @@ USER node
 # PRODUCTION
 ###################
 
-FROM node:18-slim As production
-
-RUN npx -y playwright@1.49.1 install --with-deps
+FROM node:18-alpine As production
 
 WORKDIR /usr/src/app
 
