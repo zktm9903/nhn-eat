@@ -146,7 +146,7 @@ export default function Home() {
 	};
 
 	return (
-		<div className="relative flex h-[600px] w-full flex-col scrollbar-hide">
+		<div className="relative flex h-[550px] w-full flex-col scrollbar-hide">
 			<Tabs defaultValue="menu" className="flex h-full w-full flex-col">
 				<header className="flex w-full items-center justify-between p-2">
 					<div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ function DateBox({
 				<Button
 					variant={'outline'}
 					className={cn(
-						'w-[240px] justify-start text-left font-normal',
+						'w-[210px] justify-start text-left font-normal',
 						!date && 'text-muted-foreground',
 					)}
 				>
