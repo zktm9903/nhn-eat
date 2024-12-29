@@ -7,6 +7,10 @@ export default {
 	darkMode: ['class'],
 	content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
 	theme: {
+		screens: {
+			mobile: { max: '599px' },
+			desktop: { min: '600px' },
+		},
 		extend: {
 			borderRadius: {
 				lg: 'var(--radius)',

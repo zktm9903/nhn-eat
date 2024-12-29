@@ -10,3 +10,5 @@ back/node_modules/
 back/dist/
 
 .env
+
+.DS_Store

@@ -4,14 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-	font-family: 'Pretendard';
-	width: 600px;
-	overflow: auto;
+#root {
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+		env(safe-area-inset-left);
 }
 
 html {
 	scrollbar-width: none; /* Firefox에서 스크롤바 숨기기 */
+	overflow: hidden;
+	font-family: 'Pretendard';
 }
 
 html::-webkit-scrollbar {

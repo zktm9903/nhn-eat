@@ -10,7 +10,6 @@ import { ko } from 'date-fns/locale';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarIcon, Loader2, RefreshCw } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
-import { Bounce, toast } from 'react-toastify';
 import { cn } from './lib/utils';
 
 import {
@@ -80,22 +79,6 @@ export default function Home() {
 		);
 	}, [menuQuery.data, menuQuery.isFetching]);
 
-	useEffect(() => {
-		if (menuQuery.isFetching) return;
-		toast.success('데이터를 불러왔습니다.', {
-			icon: <img src="pop-cat.webp" className="h-auto w-6" />,
-			position: 'bottom-right',
-			autoClose: 800,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnHover: true,
-			draggable: true,
-			progress: undefined,
-			theme: 'colored',
-			transition: Bounce,
-		});
-	}, [menuQuery.isFetching]);
-
 	const reFetch = () => {
 		queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date] });
 	};
@@ -146,10 +129,10 @@ export default function Home() {
 	};
 
 	return (
-		<div className="relative flex h-[550px] w-full flex-col scrollbar-hide">
+		<div className="relative flex h-screen w-screen flex-col scrollbar-hide" id="test">
 			<Tabs defaultValue="menu" className="flex h-full w-full flex-col">
-				<header className="flex w-full items-center justify-between p-2">
-					<div className="flex items-center gap-2">
+				<header className="flex w-full items-start justify-between p-2">
+					<div className="flex flex-grow flex-wrap items-center gap-2">
 						<DateBox date={date} setDate={setDate} />
 						<Select value={mealType} onValueChange={v => setMealType(v as MealType)}>
 							<SelectTrigger className="w-[80px]">
@@ -166,34 +149,39 @@ export default function Home() {
 						</TabsList>
 						<AnimalBox />
 					</div>
-					<div></div>
 
-					<Button size="icon" onClick={reFetch}>
+					<Button size="icon" onClick={reFetch} className="flex-shrink-0">
 						{menuQuery.isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />}
 					</Button>
 				</header>
 				<main className="flex-grow overflow-auto px-2 pb-2">
-					<TabsContent value="menu" className="mt-0">
-						<div className="mb-2 mt-0 grid grid-cols-2 gap-2">
-							{menuQuery.data &&
-								menuQuery.data
-									?.filter(menu => !menu.isLunchBox)
-									.map(menu => (
-										<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
-									))}
-						</div>
-						<div className="flex flex-col gap-2">
-							{menuQuery.data &&
-								menuQuery.data
-									?.filter(menu => menu.isLunchBox)
-									.map(menu => (
-										<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
-									))}
-						</div>
-					</TabsContent>
-					<TabsContent value="statistics" className="mt-0">
-						<MenuChartCard menuChartData={chartData} block={block} mealType={mealType} />
-					</TabsContent>
+					{menuQuery.data && menuQuery.data.length === 0 ? (
+						<p className="mt-[50px] text-center text-[#555555]">데이터가 없습니다.</p>
+					) : (
+						<>
+							<TabsContent value="menu" className="mt-0">
+								<div className="mb-2 mt-0 grid grid-cols-2 gap-2 mobile:grid-cols-1">
+									{menuQuery.data &&
+										menuQuery.data
+											?.filter(menu => !menu.isLunchBox)
+											.map(menu => (
+												<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
+											))}
+								</div>
+								<div className="mb-[100px] flex flex-col gap-2">
+									{menuQuery.data &&
+										menuQuery.data
+											?.filter(menu => menu.isLunchBox)
+											.map(menu => (
+												<MenuCard key={menu.id} menu={menu} like={like} dislike={dislike} />
+											))}
+								</div>
+							</TabsContent>
+							<TabsContent value="statistics" className="mt-0">
+								<MenuChartCard menuChartData={chartData} block={block} mealType={mealType} />
+							</TabsContent>
+						</>
+					)}
 				</main>
 			</Tabs>
 		</div>
@@ -265,21 +253,23 @@ function AnimalBox() {
 					<DrawerTitle>정말 바꾸십니까 신중히 골라주세요.</DrawerTitle>
 					<DrawerDescription>동물 사진 제보 받습니다.</DrawerDescription>
 				</DrawerHeader>
-				<DrawerClose className="mb-[32px] flex justify-center gap-3">
-					<img
-						src={
-							'https://velog.velcdn.com/images/looksgood99/post/33d5bc4d-ddf0-4d38-8883-78f5756c1708/image.png'
-						}
-						className="aspect-square h-auto w-[200px] cursor-pointer rounded-lg duration-200 hover:scale-105"
-						onClick={() => setAnimal('cat')}
-					/>
-					<img
-						src={
-							'https://velog.velcdn.com/images/looksgood99/post/dda487f2-6fd0-4417-81a2-89b73c140bc3/image.png'
-						}
-						className="aspect-square h-auto w-[200px] cursor-pointer rounded-lg duration-200 hover:scale-105"
-						onClick={() => setAnimal('dog')}
-					/>
+				<DrawerClose className="mb-[32px] flex justify-center">
+					<div className="mx-6 flex w-full max-w-[500px] justify-center gap-3">
+						<img
+							src={
+								'https://velog.velcdn.com/images/looksgood99/post/33d5bc4d-ddf0-4d38-8883-78f5756c1708/image.png'
+							}
+							className="aspect-square h-auto w-[50%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105"
+							onClick={() => setAnimal('cat')}
+						/>
+						<img
+							src={
+								'https://velog.velcdn.com/images/looksgood99/post/dda487f2-6fd0-4417-81a2-89b73c140bc3/image.png'
+							}
+							className="aspect-square h-auto w-[50%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105"
+							onClick={() => setAnimal('dog')}
+						/>
+					</div>
 				</DrawerClose>
 			</DrawerContent>
 		</Drawer>
@@ -338,7 +328,10 @@ function MenuCard({
 			{!menu.isLunchBox && (
 				<CardContent className="pb-6">
 					{menu.imageUrl ? (
-						<img src={menu.imageUrl} className="h-[140px] w-full rounded-sm object-cover" />
+						<img
+							src={menu.imageUrl}
+							className="aspect-[3/2] h-auto w-full rounded-sm object-cover"
+						/>
 					) : (
 						<ImageWithPreview
 							delay={3000}
