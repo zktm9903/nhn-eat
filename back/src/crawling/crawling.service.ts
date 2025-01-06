@@ -40,8 +40,7 @@ export class CrawlingService {
         .slice(0, -2)
         .join(', ');
       const caloriesText = $(element).find('.menu_cal').text().trim();
-      const calories =
-        parseInt(caloriesText.replace(/[^0-9]/g, ''), 10) || null; // 칼로리가 없으면 null
+      const calories = parseInt(caloriesText.replace(/[^0-9]/g, ''), 10) || 0; // 칼로리가 없으면 null
 
       const category = $(element).find('.menu_category').text().trim();
       const imageUrl = $(element).find('.menu_img_box img').attr('src') || null; // 이미지 URL이 없으면 null
