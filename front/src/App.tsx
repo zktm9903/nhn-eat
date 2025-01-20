@@ -339,7 +339,7 @@ function MenuCard({
 							src={
 								animalImages ? animalImages[Math.floor(Math.random() * animalImages.length)] : ''
 							}
-							className="h-[140px] w-full rounded-sm object-cover"
+							className="aspect-[3/2] h-auto w-full rounded-sm object-cover"
 						/>
 					)}
 				</CardContent>
