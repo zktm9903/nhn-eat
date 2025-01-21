@@ -43,7 +43,11 @@ export class CrawlingService {
       const calories = parseInt(caloriesText.replace(/[^0-9]/g, ''), 10) || 0; // 칼로리가 없으면 null
 
       const category = $(element).find('.menu_category').text().trim();
-      const imageUrl = $(element).find('.menu_img_box img').attr('src') || null; // 이미지 URL이 없으면 null
+      const imageUrl =
+        $(element)
+          .find('.menu_img_box img')
+          .attr('src')
+          ?.replace('http:', 'https:') || null; // 이미지 URL이 없으면 null
 
       // MealType 결정
       let mealType: MealType;
