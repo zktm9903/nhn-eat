@@ -1,38 +1,38 @@
 {
   "expo": {
-    "name": "rn",
-    "slug": "rn",
+    "name": "nm-eat",
+    "slug": "nm-eat",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "icon": "./assets/128.png",
+    "scheme": "nm-eat",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zktm9903.rn"
+      "bundleIdentifier": "com.zktm9903.nm-eat"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/128.png",
+        "backgroundColor": "#000000"
       },
-      "package": "com.zktm9903.rn"
+      "package": "com.zktm9903.nmeat"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/128.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/128.png",
+          "imageWidth": 128,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#000000"
         }
       ]
     ],
@@ -44,8 +44,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "0fdd18ea-e88f-4287-8965-62f9c28602e0"
+        "projectId": "ad528aee-b693-4005-bb3f-e29d88dda52e"
       }
-    }
+    },
+    "owner": "zktm9903"
   }
 }

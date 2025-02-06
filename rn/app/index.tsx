@@ -4,8 +4,7 @@ export default function Index() {
   return (
     <WebView
       source={{
-        // uri: "http://localhost:5173/",
-        uri: "https://alpha-sangcheol.s3.ap-northeast-2.amazonaws.com/index.html",
+        uri: "https://nm-eat.sangcheol.site/",
       }}
       style={{ flex: 1 }}
     />
