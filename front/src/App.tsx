@@ -40,7 +40,7 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from './components/ui/drawer';
-import { AnimalContext } from './components/AnimalImageProvider';
+import { Animal, AnimalContext } from './components/AnimalImageProvider';
 
 const chartConfig = {
 	desktop: {
@@ -241,33 +241,41 @@ function DateBox({
 	);
 }
 
+const ANIMAL_LABEL: Record<Animal, string> = {
+	cat: '고양이',
+	dog: '강아지',
+	capybara: '카피바라',
+};
+
 function AnimalBox() {
 	const { animal, setAnimal } = useContext(AnimalContext);
+
 	return (
 		<Drawer>
 			<DrawerTrigger asChild>
-				<Button variant="outline">{animal === 'cat' ? '고양이' : '강아지'}</Button>
+				<Button variant="outline">{ANIMAL_LABEL[animal ?? 'cat']}</Button>
 			</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>정말 바꾸십니까 신중히 골라주세요.</DrawerTitle>
-					<DrawerDescription>동물 사진 제보 받습니다.</DrawerDescription>
+					<DrawerDescription>지정된 동물의 짤이 보여집니다.</DrawerDescription>
 				</DrawerHeader>
 				<DrawerClose className="mb-[32px] flex justify-center">
-					<div className="mx-6 flex w-full max-w-[500px] justify-center gap-3">
+					<div className="mx-6 flex w-full max-w-[500px] flex-wrap justify-center gap-3">
 						<img
-							src={
-								'https://velog.velcdn.com/images/looksgood99/post/33d5bc4d-ddf0-4d38-8883-78f5756c1708/image.png'
-							}
-							className="aspect-square h-auto w-[50%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105"
+							src={'/cat.webp'}
+							className="aspect-square h-auto w-[30%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
 							onClick={() => setAnimal('cat')}
 						/>
 						<img
-							src={
-								'https://velog.velcdn.com/images/looksgood99/post/dda487f2-6fd0-4417-81a2-89b73c140bc3/image.png'
-							}
-							className="aspect-square h-auto w-[50%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105"
+							src={'/dog.webp'}
+							className="aspect-square h-auto w-[30%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
 							onClick={() => setAnimal('dog')}
+						/>
+						<img
+							src={'/capybara.webp'}
+							className="aspect-square h-auto w-[30%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
+							onClick={() => setAnimal('capybara')}
 						/>
 					</div>
 				</DrawerClose>
@@ -335,7 +343,7 @@ function MenuCard({
 					) : (
 						<ImageWithPreview
 							delay={3000}
-							placeholder={`/no-image-${animal}.webp`}
+							placeholder={`/${animal}.webp`}
 							src={
 								animalImages ? animalImages[Math.floor(Math.random() * animalImages.length)] : ''
 							}

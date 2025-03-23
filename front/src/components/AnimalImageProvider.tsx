@@ -3,11 +3,11 @@ import { CACHE_KEY } from '@/consts/cacheKey';
 import { useQuery } from '@tanstack/react-query';
 import { ReactNode, createContext, useEffect, useState } from 'react';
 
-export type Animal = 'cat' | 'dog';
+export type Animal = 'cat' | 'dog' | 'capybara';
 
 export const AnimalContext = createContext<{
-	animal: Animal | undefined;
-	setAnimal: React.Dispatch<React.SetStateAction<Animal | undefined>>;
+	animal: Animal;
+	setAnimal: React.Dispatch<React.SetStateAction<Animal>>;
 	animalImages: string[] | undefined;
 }>({
 	animal: 'cat',
@@ -16,7 +16,7 @@ export const AnimalContext = createContext<{
 });
 
 export const AnimalImageProvider = ({ children }: { children: ReactNode }) => {
-	const [animal, setAnimal] = useState<Animal>();
+	const [animal, setAnimal] = useState<Animal>((localStorage.getItem('animal') as Animal) ?? 'cat');
 
 	const imagesQuery = useQuery<string[]>({
 		queryKey: [CACHE_KEY.IMAGE, animal],
@@ -33,7 +33,8 @@ export const AnimalImageProvider = ({ children }: { children: ReactNode }) => {
 
 	useEffect(() => {
 		const preAnimal = localStorage.getItem('animal');
-		if (preAnimal === 'cat' || preAnimal === 'dog') setAnimal(preAnimal as Animal);
+		if (preAnimal === 'cat' || preAnimal === 'dog' || preAnimal === 'capybara')
+			setAnimal(preAnimal as Animal);
 		else setAnimal('cat');
 	}, []);
 

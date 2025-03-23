@@ -22,9 +22,9 @@ export const ImageWithPreview = ({ placeholder, src, delay, ...props }: ImageWit
 	return (
 		<>
 			{mount ? (
-				<img {...props} id="real-image" src={src} alt="catOrDog" />
+				<img {...props} id="real-image" src={src} alt="animal" />
 			) : (
-				<img {...props} id="preview-image" src={placeholder} alt="catOrDog" />
+				<img {...props} id="preview-image" src={placeholder} alt="animal" />
 			)}
 		</>
 	);
