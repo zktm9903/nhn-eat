@@ -1,26 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { ImageType } from './enum/image-type.enum';
-import { Image } from './entity/image.entity';
 
 @Injectable()
 export class ImageService {
-  constructor(private dataSource: DataSource) {}
-
-  async find(type: ImageType) {
-    console.log('000000', type);
-    const imageRepository = this.dataSource.getRepository(Image);
-    const images = await imageRepository.find({
-      select: {
-        imageUrl: true,
-      },
-      where: {
-        imageType: type,
-      },
-    });
-
-    console.log(images);
-
-    return images;
+  async getRandomImages(type: ImageType) {
+    const response = await fetch(
+      `https://tenor.googleapis.com/v2/search?q=${type}&key=${process.env.TENOR_API_KEY}&client_key=nm-eat&limit=40&random=true&media_filter=webp`
+    );
+    const data = await response.json();
+    return data.results.map((result) => result.media_formats.webp.url);
   }
 }

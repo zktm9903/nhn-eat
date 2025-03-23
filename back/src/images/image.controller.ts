@@ -10,10 +10,10 @@ export class ImageController {
   constructor(private readonly imagesService: ImageService) {}
 
   @Get('')
-  async getImages(@Req() request: Request) {
+  async getTestImages(@Req() request: Request) {
     const imageType = request.query['type'] as ImageType;
-    const images = await this.imagesService.find(imageType);
+    const images = await this.imagesService.getRandomImages(imageType);
 
-    return images.map((image) => image.imageUrl);
+    return images;
   }
 }
