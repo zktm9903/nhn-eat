@@ -42,6 +42,8 @@ import {
 } from './components/ui/drawer';
 import { Animal, AnimalContext } from './components/AnimalImageProvider';
 import MobileStore from './components/MobileStore';
+import NotificationBox from './components/NotificationBox';
+
 const chartConfig = {
 	desktop: {
 		label: 'Desktop',
@@ -185,6 +187,7 @@ export default function Home() {
 					)}
 				</main>
 			</Tabs>
+			<NotificationBox />
 		</div>
 	);
 }
