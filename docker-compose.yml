@@ -33,6 +33,7 @@ services:
       DATABASE_DROPSCHEMA: "false"
       DATABASE_MAX_CONNECTION: 100
       ADMIN_TOKEN: admin123
+      TENOR_API_KEY: 
 
   nginx:
     image: nginx:latest
