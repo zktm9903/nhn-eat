@@ -41,7 +41,7 @@ import {
 	DrawerTrigger,
 } from './components/ui/drawer';
 import { Animal, AnimalContext } from './components/AnimalImageProvider';
-
+import MobileStore from './components/MobileStore';
 const chartConfig = {
 	desktop: {
 		label: 'Desktop',
@@ -148,6 +148,7 @@ export default function Home() {
 							<TabsTrigger value="statistics">통계</TabsTrigger>
 						</TabsList>
 						<AnimalBox />
+						<MobileStore />
 					</div>
 
 					<Button size="icon" onClick={reFetch} className="flex-shrink-0">
