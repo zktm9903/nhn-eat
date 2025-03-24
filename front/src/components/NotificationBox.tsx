@@ -41,7 +41,7 @@ export default function NotificationBox() {
 	};
 
 	return (
-		<div className="fixed bottom-2 right-2 z-50 flex flex-col items-end gap-2">
+		<div className="fixed bottom-2 right-2 z-50 flex max-w-[95%] flex-col items-end gap-2 mobile:bottom-4">
 			{notifications.map(notification => (
 				<Notification key={notification.id} notification={notification} read={read} />
 			))}
