@@ -249,6 +249,7 @@ const ANIMAL_LABEL: Record<Animal, string> = {
 	cat: '고양이',
 	dog: '강아지',
 	capybara: '카피바라',
+	hyrax: '바위너구리',
 };
 
 function AnimalBox() {
@@ -257,7 +258,9 @@ function AnimalBox() {
 	return (
 		<Drawer>
 			<DrawerTrigger asChild>
-				<Button variant="outline">{ANIMAL_LABEL[animal ?? 'cat']}</Button>
+				<Button variant="outline" className="px-2">
+					{ANIMAL_LABEL[animal ?? 'cat']}
+				</Button>
 			</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader>
@@ -268,18 +271,23 @@ function AnimalBox() {
 					<div className="mx-6 flex w-full max-w-[500px] flex-wrap justify-center gap-3">
 						<img
 							src={'/cat.webp'}
-							className="aspect-square h-auto w-[30%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
+							className="aspect-square h-auto w-[40%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
 							onClick={() => setAnimal('cat')}
 						/>
 						<img
 							src={'/dog.webp'}
-							className="aspect-square h-auto w-[30%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
+							className="aspect-square h-auto w-[40%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
 							onClick={() => setAnimal('dog')}
 						/>
 						<img
 							src={'/capybara.webp'}
-							className="aspect-square h-auto w-[30%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
+							className="aspect-square h-auto w-[40%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
 							onClick={() => setAnimal('capybara')}
+						/>
+						<img
+							src={'/hyrax.webp'}
+							className="aspect-square h-auto w-[40%] cursor-pointer rounded-lg object-cover duration-200 hover:scale-105 mobile:w-[40%]"
+							onClick={() => setAnimal('hyrax')}
 						/>
 					</div>
 				</DrawerClose>

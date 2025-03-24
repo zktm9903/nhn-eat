@@ -3,7 +3,7 @@ import { CACHE_KEY } from '@/consts/cacheKey';
 import { useQuery } from '@tanstack/react-query';
 import { ReactNode, createContext, useEffect, useState } from 'react';
 
-export type Animal = 'cat' | 'dog' | 'capybara';
+export type Animal = 'cat' | 'dog' | 'capybara' | 'hyrax';
 
 export const AnimalContext = createContext<{
 	animal: Animal;
@@ -33,7 +33,12 @@ export const AnimalImageProvider = ({ children }: { children: ReactNode }) => {
 
 	useEffect(() => {
 		const preAnimal = localStorage.getItem('animal');
-		if (preAnimal === 'cat' || preAnimal === 'dog' || preAnimal === 'capybara')
+		if (
+			preAnimal === 'cat' ||
+			preAnimal === 'dog' ||
+			preAnimal === 'capybara' ||
+			preAnimal === 'hyrax'
+		)
 			setAnimal(preAnimal as Animal);
 		else setAnimal('cat');
 	}, []);

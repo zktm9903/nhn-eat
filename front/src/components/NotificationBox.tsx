@@ -16,6 +16,10 @@ const NOTI: Notification[] = [
 		id: 2,
 		message: '아이폰 앱 출시했슴니다. ㅇㅅㅇ 상단 메뉴에서 확인해주세요.',
 	},
+	{
+		id: 3,
+		message: '바위너구리 추가했슴니다. -이OO님 요청-',
+	},
 ];
 
 export default function NotificationBox() {
