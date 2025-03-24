@@ -59,15 +59,18 @@ type MealType = 'lunch' | 'dinner';
 export default function Home() {
 	const queryClient = useQueryClient();
 
-	const [date, setDate] = useState<Date | undefined>(new Date()); // date : 2024-12-26
+	const [date, setDate] = useState<Date | undefined>(new Date());
+	const dateString = format(date ?? '', 'yyyy-MM-dd');
 	const [mealType, setMealType] = useState<MealType>(
 		new Date().getHours() < 15 ? 'lunch' : 'dinner',
 	);
 
+	const [tab, setTab] = useState<'menu' | 'statistics'>('menu');
+
 	// ------------------------------ 메뉴, 차트데이터 ------------------------------
 	const menuQuery = useQuery<Menu[]>({
-		queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date],
-		queryFn: () => getMenus(mealType, format(date ?? '', 'yyyy-MM-dd')),
+		queryKey: [CACHE_KEY.TODAY_MENUS, mealType, dateString],
+		queryFn: () => getMenus(mealType, dateString),
 	});
 	const [chartData, setChartData] = useState<MenuChartData[]>();
 
@@ -82,7 +85,9 @@ export default function Home() {
 	}, [menuQuery.data, menuQuery.isFetching]);
 
 	const reFetch = () => {
-		queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date] });
+		queryClient.invalidateQueries({
+			queryKey: [CACHE_KEY.TODAY_MENUS, mealType, dateString],
+		});
 	};
 
 	// ------------------------------ 이 사람은 투표를 했을까 ------------------------------
@@ -117,14 +122,19 @@ export default function Home() {
 		} catch (err) {
 			console.log(err);
 		} finally {
-			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date] });
+			await queryClient.invalidateQueries({
+				queryKey: [CACHE_KEY.TODAY_MENUS, mealType, dateString],
+			});
+			setTab('statistics');
 		}
 	};
 
 	const dislike = async (menuId: string) => {
 		try {
 			await disLikeMenuMutation.mutateAsync(menuId);
-			await queryClient.invalidateQueries({ queryKey: [CACHE_KEY.TODAY_MENUS, mealType, date] });
+			await queryClient.invalidateQueries({
+				queryKey: [CACHE_KEY.TODAY_MENUS, mealType, dateString],
+			});
 		} catch (err) {
 			console.log(err);
 		}
@@ -132,7 +142,12 @@ export default function Home() {
 
 	return (
 		<div className="relative flex h-screen w-screen flex-col scrollbar-hide" id="test">
-			<Tabs defaultValue="menu" className="flex h-full w-full flex-col">
+			<Tabs
+				defaultValue="menu"
+				className="flex h-full w-full flex-col"
+				value={tab}
+				onValueChange={v => setTab(v as 'menu' | 'statistics')}
+			>
 				<header className="flex w-full items-start justify-between p-2">
 					<div className="flex flex-grow flex-wrap items-center gap-2">
 						<DateBox date={date} setDate={setDate} />
