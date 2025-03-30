@@ -6,6 +6,7 @@ import {
   BaseEntity,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entity/user.entity';
 import { Menu } from '../../menus/entity/menu.entity';
@@ -18,7 +19,8 @@ export class UserMenu extends BaseEntity {
   @ManyToOne(() => User, (user) => user.id)
   user: User;
 
-  @ManyToOne(() => Menu, (menu) => menu.id)
+  @ManyToOne(() => Menu, { onDelete: 'CASCADE' })
+  @JoinColumn()
   menu: Menu;
 
   @Column({ default: false })

@@ -1,8 +1,16 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CrawlingService } from 'src/crawling/crawling.service';
-import { MealType } from 'src/menus/enum/meal-type.enum';
+import { Menu } from 'src/menus/entity/menu.entity';
 import { MenuService } from 'src/menus/menu.service';
+
+const isSameMenu = (menu1: Menu, menu2: Menu) => {
+  return (
+    menu1.name === menu2.name &&
+    new Date(menu1.date).toISOString().slice(0, 10) ===
+      new Date(menu2.date).toISOString().slice(0, 10)
+  );
+};
 
 @Injectable()
 export class BatchTaskService implements OnModuleInit {
@@ -10,8 +18,6 @@ export class BatchTaskService implements OnModuleInit {
     private crawlingService: CrawlingService,
     private menuService: MenuService,
   ) {}
-
-  private readonly logger = new Logger(BatchTaskService.name);
 
   async onModuleInit() {
     setTimeout(async () => {
@@ -27,29 +33,42 @@ export class BatchTaskService implements OnModuleInit {
 
   async crawingMenus() {
     const dates = await this.crawlingService.getPossibleDates();
-    this.logger.debug('파싱 가능할 날짜들: ', dates);
 
     for (const date of dates) {
-      const menus = await this.crawlingService.getMenus(date);
+      const duplicatedMenus = await this.crawlingService.getMenus(date);
+      const menuSet = new Set(
+        duplicatedMenus.map((menu) => JSON.stringify(menu)),
+      );
 
-      for (const menu of menus) {
-        const alreadyMenu = await this.menuService.findOne({
-          name: menu.name,
-          date: menu.date,
-        });
-        if (alreadyMenu) {
-          this.logger.debug('이미 존재하는 메뉴 :', menu.name);
-          await this.menuService.updateMenu(alreadyMenu, {
-            description: menu.description,
-            calories: menu.calories,
-            mealType: menu.mealType,
-            imageUrl: menu.imageUrl,
-            isLunchBox: menu.isLunchBox,
-          });
-          continue;
-        }
-        this.logger.debug('존재하지 않는 메뉴 :', menu.name);
+      const menus = Array.from(menuSet).map((menu) => JSON.parse(menu));
+      const previousMenus = await this.menuService.findAll({
+        date: new Date(date),
+      });
+
+      const createMenus = menus.filter(
+        (menu) => !previousMenus.find((m) => isSameMenu(m, menu)),
+      );
+      for (const menu of createMenus) {
         await this.menuService.createMenu(menu);
+      }
+
+      const updateMenus = previousMenus.filter((menu) =>
+        menus.find((m) => isSameMenu(m, menu)),
+      );
+      for (const menu of updateMenus) {
+        await this.menuService.updateMenu(menu, {
+          ...menus.find((m) => isSameMenu(m, menu)),
+        });
+      }
+
+      const deleteMenus = previousMenus.filter(
+        (menu) => !menus.find((m) => isSameMenu(m, menu)),
+      );
+      for (const menu of deleteMenus) {
+        await this.menuService.deleteMenuByNameAndDate(
+          menu.name,
+          new Date(menu.date).toString(),
+        );
       }
     }
   }

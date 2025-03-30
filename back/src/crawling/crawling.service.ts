@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { CreateMenuDto } from 'src/menus/dto/create-menu.dto';
-import { Menu } from 'src/menus/entity/menu.entity';
 import { MealType } from 'src/menus/enum/meal-type.enum';
 
 @Injectable()
@@ -75,14 +74,6 @@ export class CrawlingService {
 
       menus.push(menu);
     });
-
-    console.log(
-      'menus',
-      menus.filter(
-        (item, index, self) =>
-          self.findIndex((t) => t.name === item.name) === index,
-      ),
-    );
 
     return menus;
   }

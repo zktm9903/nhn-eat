@@ -47,7 +47,7 @@ export class Menu extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => MenuStats)
+  @OneToOne(() => MenuStats, { cascade: true })
   @JoinColumn()
   stats: MenuStats;
 }

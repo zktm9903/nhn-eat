@@ -14,7 +14,7 @@ export class TypeormConfig implements TypeOrmOptionsFactory {
       synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
       dropSchema: process.env.DATABASE_DROPSCHEMA === 'true',
       keepConnectionAlive: true,
-      logging: true,
+      logging: false,
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       timezone: 'Asia/Seoul',
       extra: {

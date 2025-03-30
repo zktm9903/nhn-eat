@@ -54,6 +54,13 @@ export class MenuService {
     return menus;
   }
 
+  async findAll(where: FindOptionsWhere<Menu> | FindOptionsWhere<Menu>[]) {
+    const MenuRepository = this.dataSource.getRepository(Menu);
+    const menus = await MenuRepository.findBy(where);
+
+    return menus;
+  }
+
   // async getStatsByNameAndDate(name: string, date: Date) {
   //   const menuRepository = this.dataSource.getRepository(Menu);
   //   const menu = await menuRepository.findOne({
@@ -112,27 +119,8 @@ export class MenuService {
     menu: Menu,
     updateMenuDto: Partial<CreateMenuDto>,
   ): Promise<Menu> {
-    const {
-      name,
-      description,
-      calories,
-      mealType,
-      imageUrl,
-      isLunchBox,
-      date,
-    } = updateMenuDto;
-
     const MenuRepository = this.dataSource.getRepository(Menu);
-
-    if (name !== undefined) menu.name = name;
-    if (description !== undefined) menu.description = description;
-    if (calories !== undefined) menu.calories = calories;
-    if (mealType !== undefined) menu.mealType = mealType;
-    if (imageUrl !== undefined) menu.imageUrl = imageUrl;
-    if (isLunchBox !== undefined) menu.isLunchBox = isLunchBox;
-    if (date !== undefined) menu.date = date;
-
-    await MenuRepository.save(menu);
+    await MenuRepository.save({ ...menu, ...updateMenuDto });
 
     return menu;
   }
