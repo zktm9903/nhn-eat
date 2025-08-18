@@ -149,7 +149,7 @@ public class CrawlingService {
         }
     }
 
-    @Scheduled(fixedRate = 5000)
+    // @Scheduled(fixedRate = 5000)
     public void syncMenu() {
         List<String> dates = this.getPossibleDates();
         for (String date : dates) {
@@ -180,6 +180,7 @@ public class CrawlingService {
                     menu.setCalories(newMenu.getCalories());
                     menu.setImageUrl(newMenu.getImageUrl());
                     menu.setLunchBox(newMenu.isLunchBox());
+                    menu.setLikeCount(0);
                     menuRepository.save(menu);
                 } else {
                     menuRepository.save(newMenu);

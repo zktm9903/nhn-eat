@@ -5,16 +5,10 @@ export interface Menu {
 	calories: number;
 	mealType: string;
 	imageUrl: string | null;
-	isLunchBox: boolean;
+	lunchBox: boolean;
 	date: string;
-	stats: {
-		id: number;
-		liked: number;
-	};
-	user: {
-		id: number;
-		liked: boolean;
-	};
+	likeCount: number;
+	liked: boolean;
 }
 
 export interface MenuChartData {

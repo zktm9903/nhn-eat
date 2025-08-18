@@ -45,4 +45,7 @@ public class MenuEntity {
 
     @Column(nullable = false)
     private String date;
+
+    @Column(nullable = false)
+    private int likeCount;
 }
