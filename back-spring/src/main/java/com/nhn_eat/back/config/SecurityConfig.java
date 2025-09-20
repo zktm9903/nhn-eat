@@ -18,8 +18,6 @@ import com.nhn_eat.back.filter.UuidAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
 
-
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -51,6 +49,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/public/**").permitAll()   // 인증 없이 접근 가능
                 .requestMatchers("/api/v1/user/signup").permitAll()      // signup API도 인증 없이 접근 가능
+                .requestMatchers("/actuator/health").permitAll()         // 헬스체크 허용
                 .anyRequest().authenticated()                // 나머지는 인증 필요
             )
             // Custom Filter 추가

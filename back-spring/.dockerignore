@@ -1,0 +1,32 @@
+# Gradle 빌드 결과물
+build/
+.gradle/
+
+# IDE 파일들
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS 파일들
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# 로그 파일들
+*.log
+
+# 임시 파일들
+*.tmp
+*.temp
+
+# Docker 관련
+Dockerfile
+.dockerignore
+
+# 기타
+README.md

@@ -25,7 +25,9 @@ public class UuidAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        return path.startsWith("/public") || path.equals("/api/v1/user/signup");
+        return path.startsWith("/public") 
+            || path.equals("/api/v1/user/signup")
+            || path.equals("/actuator/health");
     }
 
     @Override
@@ -35,10 +37,22 @@ public class UuidAuthenticationFilter extends OncePerRequestFilter {
 
         String uuid = null;
 
-        // Authorization 헤더에서 uuid 추출
-        String authorization = request.getHeader("Authorization");
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            uuid = authorization.substring(7); // "Bearer " 제거
+        // 쿠키에서 auth-token 추출
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("auth-token".equals(cookie.getName())) {
+                    uuid = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // 쿠키에 없으면 Authorization 헤더에서 uuid 추출 (백워드 호환성)
+        if (uuid == null) {
+            String authorization = request.getHeader("Authorization");
+            if (authorization != null && authorization.startsWith("Bearer ")) {
+                uuid = authorization.substring(7); // "Bearer " 제거
+            }
         }
 
         // uuid가 없거나 DB에 없으면 401 반환

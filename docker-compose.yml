@@ -1,51 +1,70 @@
 version: "3.8"
-services:
-  db:
-    image: postgres:15.2-alpine
-    container_name: postgres
-    environment:
-      TZ: Asia/Seoul
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: nhn-eat-app
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
 
-  back:
-    build:
-      context: ./back
-      dockerfile: dockerfile
-    container_name: nestjs
-    depends_on:
-      - db
-    ports:
-      - "3000:3000"
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: nhn-eat-mysql
     environment:
-      TZ: Asia/Seoul
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: 1234
-      DATABASE_DATABASE: nhn-eat-app
-      DATABASE_SYNCHRONIZE: "true"
-      DATABASE_DROPSCHEMA: "false"
-      DATABASE_MAX_CONNECTION: 100
-      ADMIN_TOKEN: admin123
-      TENOR_API_KEY: 
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - nhn-eat-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-prootpassword",
+        ]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 40s
+
+  backend:
+    build: ./back-spring
+    container_name: nhn-eat-backend
+    image: leesang2/nm-eat
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mydb
+      SPRING_DATASOURCE_USERNAME: myuser
+      SPRING_DATASOURCE_PASSWORD: mypassword
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - nhn-eat-network
 
   nginx:
-    image: nginx:latest
-    container_name: nginx
+    image: nginx:alpine
+    container_name: nhn-eat-nginx
     ports:
+      - "80:80"
       - "443:443"
     volumes:
       - ./nginx/conf:/etc/nginx/conf.d
-      - ../certs:/etc/nginx/certs
-      - /var/log/nginx:/var/log/nginx
+      - ./nginx/certs:/etc/nginx/certs
     depends_on:
-      - back
+      - backend
+    networks:
+      - nhn-eat-network
 
 volumes:
-  postgres-data:
+  mysql_data:
+
+networks:
+  nhn-eat-network:
+    driver: bridge

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -149,9 +150,10 @@ public class CrawlingService {
         }
     }
 
-    // @Scheduled(fixedRate = 5000)
-    public void syncMenu() {
-        List<String> dates = this.getPossibleDates();
+    @Scheduled(fixedRate = 5000)
+    public void syncMenu() {    
+        // List<String> dates = this.getPossibleDates();
+        List<String> dates = Arrays.asList("2025-09-19");
         for (String date : dates) {
             List<MenuEntity> crawlingMenus = this.getMenus(date).stream()
                 .distinct()

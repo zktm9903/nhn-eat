@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nhn_eat.back.dto.MenuResponseDTO;
-import com.nhn_eat.back.entity.MealType;
 import com.nhn_eat.back.global.response.ApiResponse;
 import com.nhn_eat.back.service.MenuService;
 
@@ -26,8 +25,8 @@ public class MenuController {
     private final MenuService menuService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<MenuResponseDTO>>> getMenus(@RequestParam String date, @RequestParam MealType mealType, @AuthenticationPrincipal String uuid) {
-        return ResponseEntity.ok().body(ApiResponse.success(menuService.getMenus(date, mealType, uuid)));
+    public ResponseEntity<ApiResponse<List<MenuResponseDTO>>> getMenus(@RequestParam String date, @AuthenticationPrincipal String uuid) {
+        return ResponseEntity.ok().body(ApiResponse.success(menuService.getMenus(date, uuid)));
     }
 
     @GetMapping("/dates")
@@ -38,7 +37,6 @@ public class MenuController {
     @PostMapping("/like")
     public ResponseEntity<ApiResponse<Boolean>> likeMenu(@RequestParam Long menuId, @AuthenticationPrincipal String uuid) {
         return ResponseEntity.ok().body(ApiResponse.success(menuService.likeMenu(menuId, uuid)));
-
     }
 
     @DeleteMapping("/like")

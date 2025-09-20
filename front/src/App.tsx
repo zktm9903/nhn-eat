@@ -49,6 +49,7 @@ export default function Home() {
 	const menuQuery = useQuery<Menu[]>({
 		queryKey: [CACHE_KEY.TODAY_MENUS, mealType, dateString],
 		queryFn: () => getMenus(mealType, dateString),
+		select: data => data,
 	});
 
 	useEffect(() => {

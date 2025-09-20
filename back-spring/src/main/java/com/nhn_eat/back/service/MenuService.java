@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import com.nhn_eat.back.entity.MenuEntity;
 import com.nhn_eat.back.dto.MenuResponseDTO;
 import com.nhn_eat.back.entity.LikeEntity;
-import com.nhn_eat.back.entity.MealType;
 import com.nhn_eat.back.entity.UserEntity;
 import com.nhn_eat.back.repository.MenuRepository;
 import com.nhn_eat.back.repository.LikeRepository;
@@ -32,12 +31,12 @@ public class MenuService {
             .collect(Collectors.toList());
     }
 
-    public List<MenuResponseDTO> getMenus(String date, MealType mealType, String uuid) {
+    public List<MenuResponseDTO> getMenus(String date, String uuid) {
         UserEntity user = userRepository.findByUuid(uuid);
 
         List<LikeEntity> likes = likeRepository.findByUserId(user.getId());
 
-        return menuRepository.findByDateAndMealType(date, mealType).stream()
+        return menuRepository.findByDate(date).stream()
             .map(menu -> {
                 return new MenuResponseDTO(menu, likes.stream()
                     .filter(like -> like.getMenuId().equals(menu.getId()))
@@ -64,6 +63,11 @@ public class MenuService {
     public boolean unlikeMenu(Long menuId, String uuid) {
         UserEntity user = userRepository.findByUuid(uuid);
         likeRepository.deleteByUserIdAndMenuId(user.getId(), menuId);
+
+        MenuEntity menu = menuRepository.findById(menuId).orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+        menu.setLikeCount(menu.getLikeCount() - 1);
+        menuRepository.save(menu);
+
         return true;
     }
 }
