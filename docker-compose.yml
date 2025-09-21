@@ -33,7 +33,7 @@ services:
       DATABASE_DROPSCHEMA: "false"
       DATABASE_MAX_CONNECTION: 100
       ADMIN_TOKEN: admin123
-      TENOR_API_KEY: 
+      TENOR_API_KEY:
 
   nginx:
     image: nginx:latest
@@ -42,7 +42,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/conf:/etc/nginx/conf.d
-      - ../certs:/etc/nginx/certs
+      - /etc/nginx/certs:/etc/nginx/certs
       - /var/log/nginx:/var/log/nginx
     depends_on:
       - back
